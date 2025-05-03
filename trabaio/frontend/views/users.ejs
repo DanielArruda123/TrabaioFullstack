@@ -1,0 +1,73 @@
+<h1>
+  <%= title %>
+</h1>
+
+<form id="userForm" action="">
+  <input type="hidden" id="id">
+  <label for="username">Nome</label>
+  <input name="username" id="username" type="text"><br>
+
+  <label for="password">Senha</label>
+  <input name="password" id="password" type="text"><br>
+
+  <label for="email">Email</label>
+  <input name="email" id="email" type="text"><br>
+
+  <label for="phone">Telefone</label>
+  <input name="phone" id="phone" type="text">
+
+  <button type="submit">Enviar</button>
+  <button type="reset">Cancelar</button>
+</form>
+
+<span id="error">
+  << /span>
+
+    <%if (error){%>
+      <span %=error%></span>
+      <%}%>
+
+        <table>
+          <thead>
+            <tr>
+              <th>COL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for(let user of users) { %>
+              <tr>
+                <% for(let prop in user) { %>
+                  <td>
+                    <%= user[prop] %>
+                  </td>
+                  <% } %>
+                    <td>
+                      <button>Editar</button>
+                      <button>Deletar</button>
+                    </td>
+              </tr>
+              <% } %>
+          </tbody>
+        </table>
+        <script>
+          const form = document.getElementById('userForm')
+
+          form.addEventListener("submit", (e) => {
+            e.preventDefault()
+
+            const formData = new formData(form)
+            const user = {}
+            formData.forEach((v, k) => {
+              user[k] = v
+            })
+
+            fetch("/users", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(user)
+            })
+              .then((res) => { return res.json() })
+              .then((user) => { console.log('foi salvo', user) })
+              .catch((error) => { document.getElementById('error').innerText = error })
+          })
+        </script>
