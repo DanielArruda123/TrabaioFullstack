@@ -4,18 +4,17 @@
 
 <form id="petForm" action="">
   <input required type="hidden" name="id" id="id">
-  <label for="petname">Nome</label>
 
-  <input required name="petname" id="petname" type="text"><br>
+  <label for="name">Nome</label>
+  <input required name="name" id="name" type="text"><br>
+
   <label for="race">Raça</label>
-
-   <label for="race">Raça:</label>
   <input required name="race" id="race" type="text"><br>
 
-  <label for="colour">Cor:</label>
+  <label for="colour">Cor</label>
   <input required name="colour" id="colour" type="text"><br>
 
-  <label for="gender">Sexo:</label>
+  <label for="gender">Sexo</label>
   <input required name="gender" id="gender" type="text"><br>
 
   <button type="submit">Enviar</button>
@@ -31,7 +30,7 @@
 <table>
   <thead>
     <tr>
-      <% for(let col of cols) { %>
+      <% for (let col of cols) { %>
         <th><%= col %></th>
       <% } %>
     </tr>
@@ -40,7 +39,7 @@
     <% if (pets && pets.length > 0) { %>
       <% pets.forEach(pet => { %>
         <tr>
-          <td><%= pet.petname %></td>
+          <td><%= pet.name %></td>
           <td><%= pet.race %></td>
           <td><%= pet.colour %></td>
           <td><%= pet.gender %></td>
@@ -59,18 +58,18 @@
 </table>
 
 <script>
-  const form = document.getElementById('petForm')
+  const form = document.getElementById('petForm');
 
   form.addEventListener("submit", (e) => {
-    e.preventDefault()
-    const pet = mountDataForm()
+    e.preventDefault();
+    const pet = mountDataForm();
 
-    let id = document.getElementById("id").value
-    let METHOD = id ? `PUT` : 'POST'
-    let URL = id ? `/pets/${id}` : '/pets'
+    let id = document.getElementById("id").value;
+    let METHOD = id ? `PUT` : 'POST';
+    let URL = id ? `/pets/${id}` : '/pets';
 
-    createOrUpdate(pet, URL, METHOD)
-  })
+    createOrUpdate(pet, URL, METHOD);
+  });
 
   function createOrUpdate(pet, URL, METHOD) {
     fetch(URL, {
@@ -78,62 +77,62 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(pet)
     })
-    .then(async (res) => { return await checkERROR(res) })
+    .then(async (res) => { return await checkERROR(res); })
     .then(() => {
-      form.reset()
-      window.location.reload()
+      form.reset();
+      window.location.reload();
     })
     .catch((error) => {
-      document.getElementById('error').innerText = error.message || "Erro ao salvar"
-    })
+      document.getElementById('error').innerText = error.message || "Erro ao salvar";
+    });
   }
 
   function editPet(id) {
     fetch("/pets/" + id, {
       method: "GET"
     })
-    .then(async (res) => { return await checkERROR(res) })
+    .then(async (res) => { return await checkERROR(res); })
     .then((pet) => {
       for (let prop in pet) {
-        const input = document.querySelector(`input[name="${prop}"]`)
-        if (input) input.value = pet[prop]
+        const input = document.querySelector(`input[name="${prop}"]`);
+        if (input) input.value = pet[prop];
       }
     })
     .catch((error) => {
-      document.getElementById('error').innerText = error.message || error
-    })
+      document.getElementById('error').innerText = error.message || error;
+    });
   }
 
   function deletePet(id) {
     fetch("/pets/" + id, {
       method: "DELETE"
     })
-    .then(async (res) => { return await checkERROR(res) })
+    .then(async (res) => { return await checkERROR(res); })
     .then(() => {
-      window.location.reload()
+      window.location.reload();
     })
     .catch((error) => {
-      document.getElementById('error').innerText = error.message || error
-    })
+      document.getElementById('error').innerText = error.message || error;
+    });
   }
 
   async function checkERROR(res) {
     if (!res.ok) {
-      let err = { message: 'Erro desconhecido' }
+      let err = { message: 'Erro desconhecido' };
       try {
-        err = await res.json()
+        err = await res.json();
       } catch (e) {}
-      throw err
+      throw err;
     }
-    return res.json()
+    return res.json();
   }
 
   function mountDataForm() {
-    const formData = new FormData(form)
-    const pet = {}
+    const formData = new FormData(form);
+    const pet = {};
     formData.forEach((v, k) => {
-      pet[k] = v
-    })
-    return pet
+      pet[k] = v;
+    });
+    return pet;
   }
 </script>

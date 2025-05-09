@@ -17,11 +17,10 @@ router.get('/',  function (req, res, next) {
     let cols = ["Nome", "Senha", "Email", "Telefone", "Ações"]
     res.render('layout', {body:'pages/users', title,cols, users, error: ""})
   })
-  .catch((error)=> {
+ .catch((error)=> {
     console.log('Erro', error)
     res.render('layout', {body:'pages/users', title: "Gestão de Usuários", error})
   })
-  
 })
 
 // POST NEW USER

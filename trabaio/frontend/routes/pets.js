@@ -15,19 +15,18 @@ router.get('/',  function (req, res, next) {
   .then((pets)=> {
     let title = "Gestão de Pets"
     let cols = ["Nome", "Raça", "Cor", "Sexo", "Ações"]
-    res.render('layout', {body:'pages/pets', title, pets, cols, error: ""})
+    res.render('layout', {body:'pages/pets', title,cols, pets, error: ""})
   })
   .catch((error)=> {
     console.log('Erro', error)
-    res.render('layout', {body:'pages/pets', title: "Gestão de Pets", error})
+    res.render('layout', {body:'pages/pets', title, error})
   })
-  
 })
 
-// POST NEW PET
+// POST NEW USER
 router.post("/", (req, res) => {
   const { name, race, colour, gender } = req.body;
-  fetch(url + '/register', {
+  fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" }, 
     body: JSON.stringify({ name, race, colour, gender })
@@ -38,15 +37,15 @@ router.post("/", (req, res) => {
     }
     return res.json()
   })
-  .then((pet) => {
-    res.send(pet)
+  .then((user) => {
+    res.send(user)
   })
   .catch((error) =>{
     res.status(500).send(error)
   })
 });
 
-// UPDATE PET
+// UPDATE USER
 router.put("/:id", (req, res) => {
   const { id } = req.params;
   const { name, race, colour, gender } = req.body;
@@ -69,7 +68,7 @@ router.put("/:id", (req, res) => {
   })
 });
 
-// DELETE PET
+// DELETE USER
 router.delete("/:id", (req, res) => {
   const { id } = req.params;
   fetch(url+'/'+id, {
@@ -89,7 +88,7 @@ router.delete("/:id", (req, res) => {
   })
 });
 
-// EDIT PET
+// EDIT USER
 router.get("/:id", (req, res) => {
   const { id } = req.params;
   fetch(url+'/'+id, {
