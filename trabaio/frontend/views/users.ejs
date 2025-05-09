@@ -24,131 +24,115 @@
 <span id="error"></span>
 
 <% if (error) { %>
-  <span>
-    <%= error %>
-  </span>
-  <% } %>
+  <span><%= error %></span>
+<% } %>
 
-    <table>
-      <thead>
+<table>
+  <thead>
+    <tr>
+      <% for(let col of cols) { %>
+        <th><%= col %></th>
+      <% } %>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (users && users.length > 0) { %>
+      <% users.forEach(user => { %>
         <tr>
-          <% for(let col of cols) { %>
-            <th>
-              <%= col %>
-            </th>
-            <% } %>
+          <td><%= user.username %></td>
+          <td><%= user.password %></td>
+          <td><%= user.email %></td>
+          <td><%= user.phone %></td>
+          <td>
+            <button onclick="editUser('<%= user.id %>')">Editar</button>
+            <button onclick="deleteUser('<%= user.id %>')">Excluir</button>
+          </td>
         </tr>
-      </thead>
-      <tbody>
-        <% if (users && users.length> 0) { %>
-          <% users.forEach(user=> { %>
-            <tr>
-              <td>
-                <%= user.username %>
-              </td>
-              <td>
-                <%= user.password %>
-              </td>
-              <td>
-                <%= user.email %>
-              </td>
-              <td>
-                <%= user.phone %>
-              </td>
-              <td>
-                <button onclick="editUser('<%==user.id%>')">Editar</button>
-                <button onclick="deleteUser('<%==user.id%>')">Excluir</button>
-              </td>
-            </tr>
-            <% }); %>
-              <% } else { %>
-                <tr>
-                  <td colspan="<%= cols.length %>">Nenhum usuário encontrado.</td>
-                </tr>
-                <% } %>
-      </tbody>
-    </table>
+      <% }); %>
+    <% } else { %>
+      <tr>
+        <td colspan="<%= cols.length %>">Nenhum usuário encontrado.</td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
 
-    <script>
-      const form = document.getElementById('userForm')
+<script>
+  const form = document.getElementById('userForm')
 
-      form.addEventListener("submit", (e) => {
-        e.preventDefault()
-        const user = mountDataForm()
+  form.addEventListener("submit", (e) => {
+    e.preventDefault()
+    const user = mountDataForm()
 
-        let id = "user.id"
-        let METHOD = id ? `PUT` : 'POST'
-        let URL = id ? `/users/${id}` : '/users'
+    let id = document.getElementById("id").value
+    let METHOD = id ? `PUT` : 'POST'
+    let URL = id ? `/users/${id}` : '/users'
 
-        createOrUpdate(user, URL, METHOD)
-      })
+    createOrUpdate(user, URL, METHOD)
+  })
 
-      // CRIAR OU ATT USUARIO
-      function createOrUpdate(user, URL, METHOD) {
-        fetch(URL, {
-          method: METHOD,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(user)
-        })
-          .then(async (res) => { return await checkERROR(res) })
-          .then((user) => {
-            form.reset()
-            window.location.reload()
-          })
-          .catch((error) => {
-            document.getElementById('error').innerText = error.message || "Erro ao salvar"
-          })
+  function createOrUpdate(user, URL, METHOD) {
+    fetch(URL, {
+      method: METHOD,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(user)
+    })
+    .then(async (res) => { return await checkERROR(res) })
+    .then(() => {
+      form.reset()
+      window.location.reload()
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || "Erro ao salvar"
+    })
+  }
+
+  function editUser(id) {
+    fetch("/users/" + id, {
+      method: "GET"
+    })
+    .then(async (res) => { return await checkERROR(res) })
+    .then((user) => {
+      for (let prop in user) {
+        const input = document.querySelector(`input[name="${prop}"]`)
+        if (input) input.value = user[prop]
       }
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || error
+    })
+  }
 
-      // BUSCA USUARIO POR ID E CARREGA AS INFORMAÇÕES NO FORMULÁRIO
-      function editUser(id) {
-        console.log(id)
-        fetch("/users/" + id, {
-          method: "GET"
-        })
-          .then(async (res) => { return await checkERROR(res) })
-          .then((user) => {
-            console.log('retornou o usuário', user)
-            for (let prop in user) {
-              const input = document.querySelector(`input[name="${prop}"]`)
-              input.value = user[prop]
-            }
-          })
-          .catch((error) => {
-            document.getElementById('error').innerText = error
-          })
-      }
+  function deleteUser(id) {
+    fetch("/users/" + id, {
+      method: "DELETE"
+    })
+    .then(async (res) => { return await checkERROR(res) })
+    .then(() => {
+      window.location.reload()
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || error
+    })
+  }
 
-      // DELETA POR ID
-      function deleteUser(id) {
-        console.log(id)
-        fetch("/users/" + id, {
-          method: "DELETE"
-        })
-          .then(async (res) => { return await checkERROR(res) })
-          .then((user) => {
-            window.location.reload()
-          })
-          .catch((error) => {
-            document.getElementById('error').innerText = error
-          })
-      }
-// CHECA ERRO NA RES DA REQUISIÇÃO
-      async function checkERROR(res) {
-        if (!res.ok) {
-          const err = await res.json()
-          throw err
-        }
-        return res.json()
-      }
-      // MONTAR DADOS DO USUARIO USANDO FORM DATA
-      function mountDataForm() {
-        const formData = new FormData(form)
-        const user = {}
-        formData.forEach((v, k) => {
-          user[k] = v
-        })
-        return user
-      }
+  async function checkERROR(res) {
+    if (!res.ok) {
+      let err = { message: 'Erro desconhecido' }
+      try {
+        err = await res.json()
+      } catch (e) {}
+      throw err
+    }
+    return res.json()
+  }
 
-    </script>
+  function mountDataForm() {
+    const formData = new FormData(form)
+    const user = {}
+    formData.forEach((v, k) => {
+      user[k] = v
+    })
+    return user
+  }
+</script>
