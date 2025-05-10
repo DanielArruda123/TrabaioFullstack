@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var sqlite3 = require('sqlite3');
+var verifyJWT = require('../auth/verify-token')
 
 const db = new sqlite3.Database('./database/database.db');
 
@@ -37,7 +38,7 @@ router.post('/', (req, res) => {
 });
 
 // Listar todos os pets
-router.get('/', (req, res) => {
+router.get('/', verifyJWT, (req, res) => {
   db.all('SELECT * FROM pets', (err, pets) => {
     if (err) {
       console.log('Erro ao buscar pets: ', err);
