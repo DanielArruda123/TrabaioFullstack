@@ -20,6 +20,46 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
   }
 });
 
+// Rota de teste para criar usuário automaticamente
+router.get('/create-test-user', (req, res) => {
+  const testUser = {
+    username: 'teste',
+    password: '123456',
+    email: 'teste@teste.com',
+    phone: '123456789'
+  };
+
+  db.get('SELECT * FROM users WHERE username = ?', testUser.username, (err, row) => {
+    if(row) {
+      return res.status(200).send({message: 'Usuário de teste já existe'});
+    } else {
+      bcrypt.hash(testUser.password, 10, (err, hash) => {
+        if (err) {
+          console.log("Erro ao criar o hash da senha", err);
+          return res.status(400).send({error: 'Erro ao criar o hash da senha'});
+        } else {
+          db.run('INSERT INTO users (username, password, email, phone) VALUES(?,?,?,?)', 
+            [testUser.username, hash, testUser.email, testUser.phone], 
+            (err) => {
+              if(err) {
+                console.log('Erro ao inserir usuário: ', err);
+                return res.status(500).send({error: 'Erro ao criar o usuário'});
+              } else {
+                res.status(201).send({
+                  message: "Usuário de teste criado com sucesso",
+                  credentials: {
+                    username: testUser.username,
+                    password: testUser.password
+                  }
+                });
+              }
+          });
+        }
+      });
+    }
+  });
+});
+
 router.post('/register', (req,res) =>{
   console.log(req.body)
   const { username, password, email, phone} = req.body
