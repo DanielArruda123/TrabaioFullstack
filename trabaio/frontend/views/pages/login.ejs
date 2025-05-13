@@ -1,0 +1,111 @@
+<div class="container">
+  <div class="row">
+    <div class="col s12 m6 offset-m3">
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title center-align">Login</span>
+          <% if (error) { %>
+            <div class="card-panel red lighten-4 red-text text-darken-4">
+              <i class="material-icons left">error</i>
+              <%= error %>
+            </div>
+          <% } %>
+          <form id="loginForm" action="/login" method="POST" novalidate>
+            <div class="row">
+              <div class="input-field col s12">
+                <i class="material-icons prefix">person</i>
+                <input id="username" type="text" name="username" class="validate" required 
+                       minlength="3"
+                       data-error="O username deve ter pelo menos 3 caracteres">
+                <label for="username">Username</label>
+                <span class="helper-text" data-error="Username muito curto" data-success="Username válido"></span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="input-field col s12">
+                <i class="material-icons prefix">lock</i>
+                <input id="password" type="password" name="password" class="validate" required
+                       minlength="6"
+                       data-error="A senha deve ter pelo menos 6 caracteres">
+                <label for="password">Senha</label>
+                <span class="helper-text" data-error="Senha muito curta" data-success="Senha válida"></span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col s12 center-align">
+                <button class="btn waves-effect waves-light" type="submit" id="submitBtn">
+                  Entrar
+                  <i class="material-icons right">send</i>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Inicializa os componentes do Materialize
+    M.AutoInit();
+
+    // Validação do formulário
+    const form = document.getElementById('loginForm');
+    const username = document.getElementById('username');
+    const password = document.getElementById('password');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Função para validar username
+    function validateUsername(username) {
+      return username.length >= 3;
+    }
+
+    // Função para validar senha
+    function validatePassword(password) {
+      return password.length >= 6;
+    }
+
+    // Função para atualizar o estado do botão
+    function updateSubmitButton() {
+      const isUsernameValid = validateUsername(username.value);
+      const isPasswordValid = validatePassword(password.value);
+      submitBtn.disabled = !(isUsernameValid && isPasswordValid);
+    }
+
+    // Adiciona listeners para validação em tempo real
+    username.addEventListener('input', function() {
+      const isValid = validateUsername(this.value);
+      this.classList.toggle('valid', isValid);
+      this.classList.toggle('invalid', !isValid);
+      updateSubmitButton();
+    });
+
+    password.addEventListener('input', function() {
+      const isValid = validatePassword(this.value);
+      this.classList.toggle('valid', isValid);
+      this.classList.toggle('invalid', !isValid);
+      updateSubmitButton();
+    });
+
+    // Validação no envio do formulário
+    form.addEventListener('submit', function(e) {
+      const isUsernameValid = validateUsername(username.value);
+      const isPasswordValid = validatePassword(password.value);
+
+      if (!isUsernameValid || !isPasswordValid) {
+        e.preventDefault();
+        M.toast({html: 'Por favor, preencha todos os campos corretamente', classes: 'red'});
+      } else {
+        console.log('Dados do formulário:', {
+          username: username.value,
+          password: password.value
+        });
+      }
+    });
+
+    // Inicializa o estado do botão
+    updateSubmitButton();
+  });
+</script> 

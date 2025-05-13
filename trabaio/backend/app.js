@@ -8,19 +8,22 @@ var logger = require('morgan');
 var rateLimit = require('express-rate-limit');
 var session = require('express-session')
 
-
 const cors = require('cors');
 var app = express();
 app.use(express.json());
-app.use(cors());
+
+// Configuração do CORS
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 
 //Configuração de limite de requisições
 const limiter = rateLimit({
-  windowMS: 15 * 60 * 1000,
-  max: 100
+  windowMS: 1 * 60 * 1000,
+  max: 3,
+  keyGenerator: (req, res) =>req.headers['x-forwarded-for'] || req.ip
 });
-
-app.use('/login', limiter);
 
 //Configuração de sessão
 app.use(session({
@@ -46,7 +49,7 @@ app.use('/tutors', tutorsRouter);
 app.use('/services', servicesRouter);
 app.use('/products', productsRouter);
 app.use('/solicitations', solicitationsRouter);
-app.use('/auth', authRouter)
+app.use('/auth', limiter, authRouter)
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -56,8 +59,6 @@ app.use(logger('dev'));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

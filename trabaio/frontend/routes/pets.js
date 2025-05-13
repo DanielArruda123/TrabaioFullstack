@@ -1,10 +1,17 @@
 var express = require('express');
 var router = express.Router();
-const url = "http://localhost:4000/pets"; // Corrigido 'cons' para 'const'
+const url = "http://localhost:4000/pets"; 
 
 /* GET pets listing. */
 router.get('/',  function (req, res, next) {
-  fetch(url, {method: 'GET'})
+  let title = "Gestão de Pets"
+  let cols = ["ID", "Nome", "Raça", "Cor", "Sexo", "Ações"]
+
+  const token = req.session.token || null;
+
+  console.log(token)
+
+  fetch(url, {method: 'GET', headers: {Authorization: `Bearer ${token}`}})
   .then(async (res) => {
     if(!res.ok){
       const err = await res.json()
@@ -13,13 +20,11 @@ router.get('/',  function (req, res, next) {
     return res.json()
   })
   .then((pets)=> {
-    let title = "Gestão de Pets"
-    let cols = ["Nome", "Raça", "Cor", "Sexo", "Ações"]
     res.render('layout', {body:'pages/pets', title,cols, pets, error: ""})
   })
   .catch((error)=> {
     console.log('Erro', error)
-    res.render('layout', {body:'pages/pets', title, error})
+    res.render('layout', {body:'pages/pets', title, cols, error, cols, pets: []})
   })
 })
 
