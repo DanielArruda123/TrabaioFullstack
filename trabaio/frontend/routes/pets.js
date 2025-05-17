@@ -1,10 +1,21 @@
 var express = require('express');
 var router = express.Router();
-const url = "http://localhost:4000/pets"; // Corrigido 'cons' para 'const'
+const url = "http://localhost:4000/pets";
 
 /* GET pets listing. */
 router.get('/',  function (req, res, next) {
-  fetch(url, {method: 'GET'})
+  let title = "Gestão de Pets"
+  let cols = ["Nome", "Raça", "Cor", "Sexo", "Ações"]
+
+  const token = req.session.token || ""
+
+  fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json', 
+      'Authorization': `Bearer ${token}`
+    }
+  })
   .then(async (res) => {
     if(!res.ok){
       const err = await res.json()
@@ -13,23 +24,25 @@ router.get('/',  function (req, res, next) {
     return res.json()
   })
   .then((pets)=> {
-    let title = "Gestão de Pets"
-    let cols = ["Nome", "Raça", "Cor", "Sexo", "Ações"]
     res.render('layout', {body:'pages/pets', title,cols, pets, error: ""})
   })
   .catch((error)=> {
     console.log('Erro', error)
-    res.render('layout', {body:'pages/pets', title, error})
+    res.redirect('/login')
   })
 })
 
 // POST NEW USER
 router.post("/", (req, res) => {
   const { name, race, colour, gender } = req.body;
+  const token = req.session.token || ""
   fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" }, 
-    body: JSON.stringify({ name, race, colour, gender })
+    body: JSON.stringify({ name, race, colour, gender }),
+    headers: {
+      'Content-Type': 'application/json', 
+      'Authorization': `Bearer ${token}`}
   }).then(async (res) => {
     if (!res.ok){
       const err = await res.json()
@@ -71,8 +84,13 @@ router.put("/:id", (req, res) => {
 // DELETE USER
 router.delete("/:id", (req, res) => {
   const { id } = req.params;
+  const token = req.session.token || ""
   fetch(url+'/'+id, {
     method: "DELETE",
+    headers: {
+      'Content-Type': 'application/json', 
+      'Authorization': `Bearer ${token}`
+    }
   }).then(async (res) => {
     if (!res.ok){
       const err = await res.json()
@@ -91,8 +109,13 @@ router.delete("/:id", (req, res) => {
 // EDIT USER
 router.get("/:id", (req, res) => {
   const { id } = req.params;
+  const token = req.session.token || ""
   fetch(url+'/'+id, {
     method: "GET",
+    headers: {
+      'Content-Type': 'application/json', 
+      'Authorization': `Bearer ${token}`
+    }
   }).then(async (res) => {
     if (!res.ok){
       const err = await res.json()

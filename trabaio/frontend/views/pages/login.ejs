@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+</head>
+    <div class="container">
+        <div class="row">
+            <div class="col s12 m6 offset-m3">
+                <h3 class="center-align">Login</h3>
+                <form id="loginForm" action="/login" method="POST">
+                    <div class="input-field">
+                        <input type="text" name="username" id="username" required>
+                        <label for="username">Username</label>
+                    </div>
+                    <div class="input-field">
+                        <input type="password" name="password" id="password" required>
+                        <label for="password">Password</label>
+                    </div>
+                    <div class="center-align">
+                        <button type="submit" class="btn waves-effect waves--light">Login</button>
+                        <br>
+                        <% if (error) { %>
+                            <span><%=error.error%></span>
+                        <% } %>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            M.updateTextFields();
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', function(event){
+            var username = document.getElementById('username').value;
+            var password = document.getElementById('password').value;
+
+            if(!username || !password){
+                event.preventDefault();
+                M.toast({html: 'Por favor, preencha todos os campos', classes: 'red'});
+            }
+        })
+    </script>
+
+</body>
+</html>

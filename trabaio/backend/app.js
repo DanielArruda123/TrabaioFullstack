@@ -17,10 +17,9 @@ app.use(cors());
 //Configuração de limite de requisições
 const limiter = rateLimit({
   windowMS: 15 * 60 * 1000,
-  max: 100
+  max: 100,
+  keyGenerator: (req, res)=> req.headers['x-forwarded-for'] || req.connection.remoteAddress
 });
-
-app.use('/login', limiter);
 
 //Configuração de sessão
 app.use(session({
@@ -46,7 +45,7 @@ app.use('/tutors', tutorsRouter);
 app.use('/services', servicesRouter);
 app.use('/products', productsRouter);
 app.use('/solicitations', solicitationsRouter);
-app.use('/auth', authRouter)
+app.use('/auth',limiter, authRouter)
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

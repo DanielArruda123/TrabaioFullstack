@@ -4,7 +4,6 @@ var sqlite3 = require('sqlite3');
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
 
-
 const db = new sqlite3.Database('./database/database.db')
 
 router.post('/login', (req, res) => {
@@ -21,7 +20,7 @@ router.post('/login', (req, res) => {
                 } else if (!result){
                     return res.status(401).send({error: 'Senha incorreta'})
                 } else {
-                    const token = jwt.sign({id: row.id}, 'f7c74e23b069884c186e9c8f478b32522759e88e1d112ccf1e23ec25c2d4607b',{ expiresIn: '1h' })
+                    const token = jwt.sign({id: row.id}, 'f7c74e23b069884c186e9c8f478b32522759e88e1d112ccf1e23ec25c2d4607b',{ expiresIn: '15m' })
                     return res.status(200).send({message: 'Login com sucesso', token})
                 }
             })

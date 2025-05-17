@@ -24,7 +24,7 @@
 <span id="error"></span>
 
 <% if (error) { %>
-  <span><%= error %></span>
+  <span><%= JSON.stringify(error)%></span>
 <% } %>
 
 <table>
@@ -112,7 +112,7 @@
       window.location.reload();
     })
     .catch((error) => {
-      document.getElementById('error').innerText = error.message || error;
+      document.getElementById('error').innerText = JSON.stringify(error);
     });
   }
 
