@@ -1,53 +1,63 @@
-var express = require('express');
-var router = express.Router();
-var sqlite3 = require('sqlite3');
+const express = require('express');
+const router = express.Router();
+const sqlite3 = require('sqlite3');
+const verifyJWT = require('../auth/verify-token');
 
 const db = new sqlite3.Database('./database/database.db');
 
-// Criação da tabela tutores
-
-db.run(`CREATE TABLE IF NOT EXISTS tutores (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nome TEXT,
-  contato TEXT,
-  endereco TEXT,
-  pets_associados TEXT
-)`, (err) => {
+// Criação da tabela de tutores (se não existir)
+db.run(`
+  CREATE TABLE IF NOT EXISTS tutores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    contato TEXT NOT NULL,
+    endereco TEXT NOT NULL,
+    pets_associados TEXT
+  )
+`, (err) => {
   if (err) {
-    console.error('Erro ao criar a tabela tutores:', err);
+    console.error('Erro ao criar/verificar tabela tutores:', err);
   } else {
-    console.log('Tabela tutores criada com sucesso!');
+    console.log('Tabela tutores criada/verificada com sucesso!');
   }
 });
 
-// Criar novo tutor
-router.post('/tutores', (req, res) => {
+// Rota: Criar um tutor
+router.post('/', verifyJWT, (req, res) => {
   const { nome, contato, endereco, pets_associados } = req.body;
-  db.run('INSERT INTO tutores (nome, contato, endereco, pets_associados) VALUES (?, ?, ?, ?)',
-    [nome, contato, endereco, pets_associados],
-    (err) => {
+
+  if (!nome || !contato || !endereco) {
+    return res.status(400).json({ error: 'Campos obrigatórios: nome, contato e endereço' });
+  }
+
+  db.run(
+    'INSERT INTO tutores (nome, contato, endereco, pets_associados) VALUES (?, ?, ?, ?)',
+    [nome, contato, endereco, pets_associados || ''],
+    function (err) {
       if (err) {
         console.error('Erro ao criar o tutor:', err);
-        return res.status(500).send({ error: 'Erro ao criar o tutor' });
+        return res.status(500).json({ error: 'Erro ao criar o tutor' });
       }
-      res.status(201).send({ message: 'Tutor criado com sucesso' });
-    });
+      res.status(201).json({ message: 'Tutor criado com sucesso', id: this.lastID });
+    }
+  );
 });
 
-// Listar todos os tutores
-router.get('/tutores', (req, res) => {
+// Rota: Listar todos os tutores
+router.get('/', verifyJWT, (req, res) => {
   db.all('SELECT * FROM tutores', (err, tutores) => {
     if (err) {
       console.error('Erro ao buscar os tutores:', err);
-      return res.status(500).send({ error: 'Erro ao buscar os tutores' });
+      return res.status(500).json({ error: 'Erro ao buscar os tutores' });
     }
-    res.status(200).send(tutores);
+    res.status(200).json(tutores);
   });
 });
 
-// Buscar tutor por ID
-router.get('/tutores/:id', (req, res) => {
+// Rota: Buscar tutor por ID
+router.get('/:id', verifyJWT, (req, res) => {
   const { id } = req.params;
+
   db.get('SELECT * FROM tutores WHERE id = ?', [id], (err, tutor) => {
     if (err) {
       console.error('Erro ao buscar o tutor:', err);
@@ -60,12 +70,17 @@ router.get('/tutores/:id', (req, res) => {
   });
 });
 
-// Atualizar completamente um tutor
-router.put('/tutores/:id', (req, res) => {
+// Rota: Atualizar completamente um tutor
+router.put('/:id', verifyJWT, (req, res) => {
   const { id } = req.params;
   const { nome, contato, endereco, pets_associados } = req.body;
 
-  db.run('UPDATE tutores SET nome = ?, contato = ?, endereco = ?, pets_associados = ? WHERE id = ?',
+  if (!nome || !contato || !endereco || pets_associados === undefined) {
+    return res.status(400).json({ error: 'Todos os campos são obrigatórios para atualização completa' });
+  }
+
+  db.run(
+    'UPDATE tutores SET nome = ?, contato = ?, endereco = ?, pets_associados = ? WHERE id = ?',
     [nome, contato, endereco, pets_associados, id],
     function (err) {
       if (err) {
@@ -76,26 +91,34 @@ router.put('/tutores/:id', (req, res) => {
         return res.status(404).json({ error: 'Tutor não encontrado' });
       }
       res.status(200).json({ message: 'Tutor atualizado com sucesso' });
-    });
+    }
+  );
 });
 
-// Atualização parcial de um tutor
-router.patch('/tutores/:id', (req, res) => {
+// Rota: Atualização parcial de um tutor
+router.patch('/:id', verifyJWT, (req, res) => {
   const { id } = req.params;
   const fields = req.body;
   const keys = Object.keys(fields);
-  const values = Object.values(fields);
 
   if (keys.length === 0) {
     return res.status(400).json({ error: 'Nenhum campo fornecido para atualização' });
   }
 
-  const setClause = keys.map((key) => `${key} = ?`).join(', ');
+  const allowedFields = ['nome', 'contato', 'endereco', 'pets_associados'];
+  const validKeys = keys.filter(key => allowedFields.includes(key));
+
+  if (validKeys.length === 0) {
+    return res.status(400).json({ error: 'Nenhum campo válido para atualização' });
+  }
+
+  const setClause = validKeys.map(key => `${key} = ?`).join(', ');
+  const values = validKeys.map(key => fields[key]);
 
   db.run(`UPDATE tutores SET ${setClause} WHERE id = ?`, [...values, id], function (err) {
     if (err) {
-      console.error('Erro ao atualizar o tutor parcialmente:', err);
-      return res.status(500).json({ error: 'Erro ao atualizar o tutor parcialmente' });
+      console.error('Erro ao atualizar parcialmente o tutor:', err);
+      return res.status(500).json({ error: 'Erro ao atualizar parcialmente o tutor' });
     }
     if (this.changes === 0) {
       return res.status(404).json({ error: 'Tutor não encontrado' });
@@ -104,9 +127,10 @@ router.patch('/tutores/:id', (req, res) => {
   });
 });
 
-// Deletar um tutor
-router.delete('/tutores/:id', (req, res) => {
+// Rota: Deletar tutor
+router.delete('/:id', verifyJWT, (req, res) => {
   const { id } = req.params;
+
   db.run('DELETE FROM tutores WHERE id = ?', [id], function (err) {
     if (err) {
       console.error('Erro ao deletar o tutor:', err);
@@ -120,3 +144,4 @@ router.delete('/tutores/:id', (req, res) => {
 });
 
 module.exports = router;
+

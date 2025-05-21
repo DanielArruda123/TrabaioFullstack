@@ -24,12 +24,20 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var petsRouter = require('./routes/pets');
 var authRouter = require('./routes/auth');
+var productsRouter = require('./routes/products');
+var servicesRouter = require('./routes/services');
+var solicitationsRouter = require('./routes/solicitations');
+var tutorsRouter = require('./routes/tutors');
 
 //DEFININDO ENDPOINT PARA AS ROTAS IMPORTADAS
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/pets', petsRouter);
 app.use('/login', authRouter);
+app.use('/products', productsRouter);
+app.use('/services', servicesRouter);
+app.use('/solicitations', solicitationsRouter);
+app.use('/tutors', tutorsRouter);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
