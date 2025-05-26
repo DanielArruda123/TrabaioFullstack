@@ -1,39 +1,33 @@
-<h1><%= title %></h1>
+<!-- filepath: views/pages/tutors.ejs -->
+<h1>Gestão de Tutores</h1>
 
-<form id="tutorForm" action="">
+<form id="tutorForm">
   <input type="hidden" name="id" id="id">
-
-  <label for="nome">Nome</label>
+  <label>Nome</label>
   <input required name="nome" id="nome" type="text"><br>
-
-  <label for="contato">Contato</label>
+  <label>Contato</label>
   <input required name="contato" id="contato" type="text"><br>
-
-  <label for="endereco">Endereço</label>
+  <label>Endereço</label>
   <input required name="endereco" id="endereco" type="text"><br>
-
-  <label for="pets_associados">Pets Associados</label>
-  <input required name="pets_associados" id="pets_associados" type="text"><br>
-
+  <label>Pets Associados (IDs separados por vírgula)</label>
+  <input name="pets_associados" id="pets_associados" type="text"><br>
   <button type="submit">Enviar</button>
   <button type="reset">Cancelar</button>
 </form>
 
 <span id="error"></span>
 
-<% if (error) { %>
-  <span><%= JSON.stringify(error) %></span>
-<% } %>
-
 <table>
   <thead>
-  <tr>
-    <th>ID</th> <!-- nova coluna -->
-    <% for (let col of cols) { %>
-      <th><%= col %></th>
-    <% } %>
-  </tr>
-</thead>
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th>Contato</th>
+      <th>Endereço</th>
+      <th>Pets Associados</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
   <tbody>
     <% if (tutors && tutors.length > 0) { %>
       <% tutors.forEach(tutor => { %>
@@ -51,7 +45,7 @@
       <% }) %>
     <% } else { %>
       <tr>
-        <td colspan="<%= cols.length %>">Nenhum tutor encontrado.</td>
+        <td colspan="6">Nenhum tutor encontrado.</td>
       </tr>
     <% } %>
   </tbody>
@@ -59,15 +53,12 @@
 
 <script>
   const form = document.getElementById('tutorForm');
-
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const tutor = mountDataForm();
-
     const id = document.getElementById("id").value;
     const METHOD = id ? 'PUT' : 'POST';
     const URL = id ? `/tutors/${id}` : '/tutors';
-
     createOrUpdate(tutor, URL, METHOD);
   });
 
@@ -115,34 +106,16 @@
   async function checkERROR(res) {
     if (!res.ok) {
       let err = { message: 'Erro desconhecido' };
-      try {
-        err = await res.json();
-      } catch (e) {}
+      try { err = await res.json(); } catch (e) {}
       throw err;
     }
     return res.json();
   }
 
-  function salvar(){
-    const form = document.getElementById("form");
+  function mountDataForm() {
     const formData = new FormData(form);
-    pet = {}
-    for (const [key, value] of formData) {
-    pet[key] = value
-    }
-
-    fetch("http://localhost:4000"+"pets",{
-    method: "POST",
-    headers: {
-    'content-Type': 'application/json',
-    body: JSON.stringify(pet)
-    }
-    }).then((res)=>{
-    return res.json()
-    })
-    .then((data)=>{
-    console.log(data)
-    })
-    }
+    const tutor = {};
+    formData.forEach((v, k) => { tutor[k] = v; });
+    return tutor;
+  }
 </script>
-

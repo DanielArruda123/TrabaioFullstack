@@ -1,6 +1,6 @@
-var express = require('express');
-var router = express.Router();
-const url = "http://localhost:4000/tutors"; // Ajuste a URL da sua API
+const express = require('express');
+const router = express.Router();
+const url = "http://localhost:4000/tutors";
 
 // Listar todos os tutores
 router.get('/', function (req, res) {
@@ -63,10 +63,14 @@ router.post("/", (req, res) => {
 router.put("/:id", (req, res) => {
   const { id } = req.params;
   const { nome, contato, endereco, pets_associados } = req.body;
+  const token = req.session.token || "";
 
   fetch(`${url}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
     body: JSON.stringify({ nome, contato, endereco, pets_associados })
   })
     .then(async (response) => {
