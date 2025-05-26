@@ -30,15 +30,17 @@
 <table>
   <thead>
     <tr>
-      <% for (let col of cols) { %>
-        <th><%= col %></th>
-      <% } %>
+      <th>ID</th> <!-- nova coluna -->
+    <% for (let col of cols) { %>
+      <th><%= col %></th>
+    <% } %>
     </tr>
   </thead>
   <tbody>
     <% if (pets && pets.length > 0) { %>
       <% pets.forEach(pet => { %>
         <tr>
+          <td><%= pet.id %></td>
           <td><%= pet.name %></td>
           <td><%= pet.race %></td>
           <td><%= pet.colour %></td>

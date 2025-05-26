@@ -27,16 +27,18 @@
 
 <table>
   <thead>
-    <tr>
-      <% for (let col of cols) { %>
-        <th><%= col %></th>
-      <% } %>
-    </tr>
-  </thead>
+  <tr>
+    <th>ID</th> <!-- nova coluna -->
+    <% for (let col of cols) { %>
+      <th><%= col %></th>
+    <% } %>
+  </tr>
+</thead>
   <tbody>
     <% if (tutors && tutors.length > 0) { %>
       <% tutors.forEach(tutor => { %>
         <tr>
+          <td><%= tutor.id %></td>
           <td><%= tutor.nome %></td>
           <td><%= tutor.contato %></td>
           <td><%= tutor.endereco %></td>
@@ -121,13 +123,26 @@
     return res.json();
   }
 
-  function mountDataForm() {
+  function salvar(){
+    const form = document.getElementById("form");
     const formData = new FormData(form);
-    const tutor = {};
-    formData.forEach((v, k) => {
-      tutor[k] = v;
-    });
-    return tutor;
-  }
+    pet = {}
+    for (const [key, value] of formData) {
+    pet[key] = value
+    }
+
+    fetch("http://localhost:4000"+"pets",{
+    method: "POST",
+    headers: {
+    'content-Type': 'application/json',
+    body: JSON.stringify(pet)
+    }
+    }).then((res)=>{
+    return res.json()
+    })
+    .then((data)=>{
+    console.log(data)
+    })
+    }
 </script>
 

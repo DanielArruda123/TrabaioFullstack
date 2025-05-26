@@ -1,39 +1,42 @@
+<!-- filepath: views/pages/solicitations.ejs -->
 <h1><%= title %></h1>
 
 <form id="solicitationForm" action="">
-  <input type="hidden" name="id" id="id">
+  <input required type="hidden" name="id" id="id">
 
-  <label for="solicitante">Solicitante</label>
-  <input required name="solicitante" id="solicitante" type="text"><br>
+  <label for="tutor">Tutor</label>
+  <input required name="tutor" id="tutor" type="text"><br>
+
+  <label for="pet">Pet</label>
+  <input required name="pet" id="pet" type="text"><br>
 
   <label for="servico">Serviço</label>
   <input required name="servico" id="servico" type="text"><br>
 
-  <label for="data_solicitacao">Data da Solicitação</label>
-  <input required name="data_solicitacao" id="data_solicitacao" type="date"><br>
+  <label for="data_hora">Data/Hora</label>
+  <input required name="data_hora" id="data_hora" type="text"><br>
 
   <label for="status">Status</label>
   <input required name="status" id="status" type="text"><br>
 
-  <label for="observacoes">Observações</label>
-  <input name="observacoes" id="observacoes" type="text"><br>
-
   <button type="submit">Enviar</button>
-  <button type="reset" onclick="clearForm()">Cancelar</button>
+  <button type="reset">Cancelar</button>
 </form>
 
-<span id="error" style="color: red;"></span>
+<span id="error"></span>
 
 <% if (error) { %>
-  <span style="color: red;"><%= JSON.stringify(error) %></span>
+  <span><%= JSON.stringify(error) %></span>
 <% } %>
 
-<table border="1" cellpadding="5" cellspacing="0">
+<table>
   <thead>
     <tr>
-      <% for (let col of cols) { %>
-        <th><%= col %></th>
-      <% } %>
+      <th>Tutor</th>
+      <th>Pet</th>
+      <th>Serviço</th>
+      <th>Data/Hora</th>
+      <th>Status</th>
       <th>Ações</th>
     </tr>
   </thead>
@@ -41,20 +44,20 @@
     <% if (solicitations && solicitations.length > 0) { %>
       <% solicitations.forEach(solicitation => { %>
         <tr>
-          <td><%= solicitation.solicitante %></td>
+          <td><%= solicitation.tutor %></td>
+          <td><%= solicitation.pet %></td>
           <td><%= solicitation.servico %></td>
-          <td><%= solicitation.data_solicitacao %></td>
+          <td><%= solicitation.data_hora %></td>
           <td><%= solicitation.status %></td>
-          <td><%= solicitation.observacoes || '' %></td>
           <td>
-            <button type="button" onclick="editSolicitation('<%= solicitation.id %>')">Editar</button>
-            <button type="button" onclick="deleteSolicitation('<%= solicitation.id %>')">Excluir</button>
+            <button onclick="editSolicitation('<%= solicitation.id %>')">Editar</button>
+            <button onclick="deleteSolicitation('<%= solicitation.id %>')">Excluir</button>
           </td>
         </tr>
       <% }) %>
     <% } else { %>
       <tr>
-        <td colspan="<%= cols.length + 1 %>">Nenhuma solicitação encontrada.</td>
+        <td colspan="6">Nenhuma solicitação encontrada.</td>
       </tr>
     <% } %>
   </tbody>
@@ -80,64 +83,50 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(solicitation)
     })
-    .then(async res => {
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Erro desconhecido');
-      }
-      return res.json();
-    })
+    .then(async (res) => await checkERROR(res))
     .then(() => {
       form.reset();
-      clearForm();
-      document.getElementById('error').innerText = '';
       window.location.reload();
     })
     .catch((error) => {
-      console.error("Erro ao salvar:", error);
       document.getElementById('error').innerText = error.message || "Erro ao salvar";
     });
   }
 
   function editSolicitation(id) {
-    fetch("/solicitations/" + id)
-      .then(async res => {
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Erro desconhecido');
-        }
-        return res.json();
-      })
-      .then((solicitation) => {
-        for (let prop in solicitation) {
-          const input = document.querySelector(`input[name="${prop}"]`);
-          if (input) input.value = solicitation[prop];
-        }
-      })
-      .catch((error) => {
-        console.error("Erro ao buscar solicitação:", error);
-        document.getElementById('error').innerText = error.message || "Erro ao buscar solicitação";
-      });
+    fetch("/solicitations/" + id, { method: "GET" })
+    .then(async (res) => await checkERROR(res))
+    .then((solicitation) => {
+      for (let prop in solicitation) {
+        const input = document.querySelector(`input[name="${prop}"]`);
+        if (input) input.value = solicitation[prop];
+      }
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || error;
+    });
   }
 
   function deleteSolicitation(id) {
-    if (!confirm("Tem certeza que deseja excluir esta solicitação?")) return;
-
     fetch("/solicitations/" + id, { method: "DELETE" })
-      .then(async res => {
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Erro desconhecido');
-        }
-        return res.json();
-      })
-      .then(() => {
-        window.location.reload();
-      })
-      .catch((error) => {
-        console.error("Erro ao excluir solicitação:", error);
-        document.getElementById('error').innerText = error.message || "Erro ao excluir solicitação";
-      });
+    .then(async (res) => await checkERROR(res))
+    .then(() => {
+      window.location.reload();
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = JSON.stringify(error);
+    });
+  }
+
+  async function checkERROR(res) {
+    if (!res.ok) {
+      let err = { message: 'Erro desconhecido' };
+      try {
+        err = await res.json();
+      } catch (e) {}
+      throw err;
+    }
+    return res.json();
   }
 
   function mountDataForm() {
@@ -147,11 +136,5 @@
       solicitation[k] = v;
     });
     return solicitation;
-  }
-
-  function clearForm() {
-    form.reset();
-    document.getElementById("id").value = '';
-    document.getElementById('error').innerText = '';
   }
 </script>

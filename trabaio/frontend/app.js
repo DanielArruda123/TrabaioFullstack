@@ -4,22 +4,20 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
 
 var app = express();
 app.use(express.json());
-
-app.use(bodyParser.urlencoded({extended: true}))
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(session({
   secret: 'f7c74e23b069884c186e9c8f478b32522759e88e1d112ccf1e23ec25c2d4607b',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false }
-}))
+}));
 
-
-// IMPORT DAS ROTAS DE /ROUTS
+// IMPORT DAS ROTAS DE /ROUTES
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var petsRouter = require('./routes/pets');
@@ -29,7 +27,7 @@ var servicesRouter = require('./routes/services');
 var solicitationsRouter = require('./routes/solicitations');
 var tutorsRouter = require('./routes/tutors');
 
-//DEFININDO ENDPOINT PARA AS ROTAS IMPORTADAS
+// DEFININDO ENDPOINT PARA AS ROTAS IMPORTADAS
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/pets', petsRouter);
@@ -47,7 +45,6 @@ app.use(logger('dev'));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

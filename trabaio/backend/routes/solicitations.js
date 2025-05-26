@@ -1,24 +1,21 @@
-const express = require('express');
-const router = express.Router();
-const sqlite3 = require('sqlite3');
-const verifyJWT = require('../auth/verify-token');
+var express = require('express');
+var router = express.Router();
+var sqlite3 = require('sqlite3');
+var verifyJWT = require('../auth/verify-token');
 
 const db = new sqlite3.Database('./database/database.db');
 
 // Criar a tabela de solicitações, se não existir
-db.run(`
-  CREATE TABLE IF NOT EXISTS solicitations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tutor TEXT NOT NULL,
-    pet TEXT NOT NULL,
-    servico_id INTEGER NOT NULL,
-    data_hora TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'Agendado',
-    FOREIGN KEY (servico_id) REFERENCES servicos (id)
-  )
-`, (err) => {
+db.run(`CREATE TABLE IF NOT EXISTS solicitations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tutor TEXT,
+  pet TEXT,
+  servico TEXT,
+  data_hora TEXT,
+  status TEXT
+)`, (err) => {
   if (err) {
-    console.error('Erro ao criar a tabela solicitations:', err.message);
+    console.error('Erro ao criar a tabela solicitations:', err);
   } else {
     console.log('Tabela solicitations criada com sucesso!');
   }
@@ -26,117 +23,103 @@ db.run(`
 
 // Criar solicitação
 router.post('/', verifyJWT, (req, res) => {
-  const { tutor, pet, servico_id, data_hora, status } = req.body;
-
-  if (!tutor || !pet || !servico_id || !data_hora) {
-    return res.status(400).json({ error: 'Campos obrigatórios ausentes: tutor, pet, servico_id, data_hora' });
-  }
-
-  const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-  if (!isoRegex.test(data_hora)) {
-    return res.status(400).json({ error: 'Formato inválido de data_hora. Use YYYY-MM-DDTHH:MM' });
-  }
-
-  db.get('SELECT id FROM servicos WHERE id = ?', [servico_id], (err, row) => {
-    if (err) return res.status(500).json({ error: 'Erro ao verificar serviço' });
-    if (!row) return res.status(400).json({ error: 'Serviço não encontrado' });
-
-    const finalStatus = status || 'Agendado';
-
-    db.run(
-      'INSERT INTO solicitations (tutor, pet, servico_id, data_hora, status) VALUES (?, ?, ?, ?, ?)',
-      [tutor, pet, servico_id, data_hora, finalStatus],
-      function (err) {
-        if (err) return res.status(500).json({ error: 'Erro ao criar solicitação' });
-        res.status(201).json({ message: 'Solicitação criada com sucesso', id: this.lastID });
+  const { tutor, pet, servico, data_hora, status } = req.body;
+  db.run(
+    'INSERT INTO solicitations (tutor, pet, servico, data_hora, status) VALUES (?, ?, ?, ?, ?)',
+    [tutor, pet, servico, data_hora, status],
+    (err) => {
+      if (err) {
+        console.error('Erro ao criar a solicitação:', err);
+        return res.status(500).send({ error: 'Erro ao criar a solicitação' });
       }
-    );
-  });
+      res.status(201).send({ message: 'Solicitação criada com sucesso' });
+    }
+  );
 });
 
-// Listar todas
+// Listar todas as solicitações
 router.get('/', verifyJWT, (req, res) => {
-  const query = `
-    SELECT sol.*, ser.nome as servico_nome 
-    FROM solicitations sol
-    LEFT JOIN servicos ser ON sol.servico_id = ser.id
-    ORDER BY sol.data_hora DESC
-  `;
-  db.all(query, [], (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Erro ao buscar as solicitações' });
-    res.status(200).json(rows);
+  db.all('SELECT * FROM solicitations', (err, solicitations) => {
+    if (err) {
+      console.error('Erro ao buscar as solicitações:', err);
+      return res.status(500).send({ error: 'Erro ao buscar as solicitações' });
+    }
+    res.status(200).send(solicitations);
   });
 });
 
-// Buscar por ID
-router.get('/:id', verifyJWT, (req, res) => {
+// Buscar solicitação por ID
+router.get('/:id', (req, res) => {
   const { id } = req.params;
-  const query = `
-    SELECT sol.*, ser.nome as servico_nome 
-    FROM solicitations sol
-    LEFT JOIN servicos ser ON sol.servico_id = ser.id
-    WHERE sol.id = ?
-  `;
-  db.get(query, [id], (err, row) => {
-    if (err) return res.status(500).json({ error: 'Erro ao buscar solicitação' });
-    if (!row) return res.status(404).json({ error: 'Solicitação não encontrada' });
-    res.status(200).json(row);
+  db.get('SELECT * FROM solicitations WHERE id = ?', [id], (err, solicitation) => {
+    if (err) {
+      console.error('Erro ao buscar a solicitação:', err);
+      return res.status(500).json({ error: 'Erro ao buscar a solicitação' });
+    }
+    if (!solicitation) {
+      return res.status(404).json({ error: 'Solicitação não encontrada' });
+    }
+    res.status(200).json(solicitation);
   });
 });
 
-// Atualizar (PUT)
-router.put('/:id', verifyJWT, (req, res) => {
+// Atualizar completamente uma solicitação
+router.put('/:id', (req, res) => {
   const { id } = req.params;
-  const { tutor, pet, servico_id, data_hora, status } = req.body;
-
-  if (!tutor || !pet || !servico_id || !data_hora || !status) {
-    return res.status(400).json({ error: 'Todos os campos são obrigatórios para PUT' });
-  }
+  const { tutor, pet, servico, data_hora, status } = req.body;
 
   db.run(
-    'UPDATE solicitations SET tutor = ?, pet = ?, servico_id = ?, data_hora = ?, status = ? WHERE id = ?',
-    [tutor, pet, servico_id, data_hora, status, id],
+    'UPDATE solicitations SET tutor = ?, pet = ?, servico = ?, data_hora = ?, status = ? WHERE id = ?',
+    [tutor, pet, servico, data_hora, status, id],
     function (err) {
-      if (err) return res.status(500).json({ error: 'Erro ao atualizar a solicitação' });
-      if (this.changes === 0) return res.status(404).json({ error: 'Solicitação não encontrada' });
+      if (err) {
+        console.error('Erro ao atualizar a solicitação:', err);
+        return res.status(500).json({ error: 'Erro ao atualizar a solicitação' });
+      }
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Solicitação não encontrada' });
+      }
       res.status(200).json({ message: 'Solicitação atualizada com sucesso' });
     }
   );
 });
 
-// Atualizar parcialmente (PATCH)
-router.patch('/:id', verifyJWT, (req, res) => {
+// Atualizar parcialmente uma solicitação
+router.patch('/:id', (req, res) => {
   const { id } = req.params;
   const fields = req.body;
   const keys = Object.keys(fields);
+  const values = Object.values(fields);
 
   if (keys.length === 0) {
     return res.status(400).json({ error: 'Nenhum campo fornecido para atualização' });
   }
 
-  const allowedFields = ['tutor', 'pet', 'servico_id', 'data_hora', 'status'];
-  const validKeys = keys.filter(key => allowedFields.includes(key));
-  const validValues = validKeys.map(key => fields[key]);
+  const setClause = keys.map((key) => `${key} = ?`).join(', ');
 
-  if (validKeys.length === 0) {
-    return res.status(400).json({ error: 'Nenhum campo válido para atualização' });
-  }
-
-  const setClause = validKeys.map(key => `${key} = ?`).join(', ');
-
-  db.run(`UPDATE solicitations SET ${setClause} WHERE id = ?`, [...validValues, id], function (err) {
-    if (err) return res.status(500).json({ error: 'Erro ao atualizar parcialmente' });
-    if (this.changes === 0) return res.status(404).json({ error: 'Solicitação não encontrada' });
+  db.run(`UPDATE solicitations SET ${setClause} WHERE id = ?`, [...values, id], function (err) {
+    if (err) {
+      console.error('Erro ao atualizar a solicitação parcialmente:', err);
+      return res.status(500).json({ error: 'Erro ao atualizar a solicitação parcialmente' });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Solicitação não encontrada' });
+    }
     res.status(200).json({ message: 'Solicitação atualizada parcialmente com sucesso' });
   });
 });
 
-// Deletar
+// Deletar uma solicitação
 router.delete('/:id', verifyJWT, (req, res) => {
   const { id } = req.params;
   db.run('DELETE FROM solicitations WHERE id = ?', [id], function (err) {
-    if (err) return res.status(500).json({ error: 'Erro ao deletar a solicitação' });
-    if (this.changes === 0) return res.status(404).json({ error: 'Solicitação não encontrada' });
+    if (err) {
+      console.error('Erro ao deletar a solicitação:', err);
+      return res.status(500).json({ error: 'Erro ao deletar a solicitação' });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ error: 'Solicitação não encontrada' });
+    }
     res.status(200).json({ message: 'Solicitação deletada com sucesso' });
   });
 });
