@@ -22,15 +22,6 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
 
 router.post('/register', (req,res) =>{
   console.log(req.body)
-<<<<<<< Updated upstream
-  const { username, password, email, phone} = req.body
-  db.run('INSERT INTO users (username, password, email, phone) VALUES(?,?,?,?)', [username, password, email, phone], (err)=>{
-    if(err){
-      console.log('Erro ao inserir usuário: ', err);
-      return res.status(500).send({error: 'Erro ao criar o usuário'})
-    }else{
-      res.status(201).send({message: "Usuário criado com sucesso"})
-=======
   const { username, password, email, phone} = req.body;
   // Definir um papel padrão para novos usuários.
   // Se você quiser que alguns usuários sejam ADN no cadastro,
@@ -63,7 +54,6 @@ router.post('/register', (req,res) =>{
           })
         }
       })
->>>>>>> Stashed changes
     }
   })
 });

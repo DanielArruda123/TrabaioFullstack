@@ -1,16 +1,5 @@
 var express = require('express');
 var router = express.Router();
-<<<<<<< Updated upstream
-const url = "http://localhost:4000/pets"; // Corrigido 'cons' para 'const'
-
-/* GET pets listing. */
-router.get('/',  function (req, res, next) {
-  fetch(url, {method: 'GET'})
-  .then(async (res) => {
-    if(!res.ok){
-      const err = await res.json()
-      throw err
-=======
 const { jwtDecode } = require('jwt-decode'); // <<-- ADICIONADO
 const url = "http://localhost:4000/pets";
 
@@ -49,42 +38,10 @@ router.get('/',  function (req, res, next) {
           return res.redirect('/login');
       }
       throw err;
->>>>>>> Stashed changes
     }
     return apiRes.json();
   })
   .then((pets)=> {
-<<<<<<< Updated upstream
-    let title = "Gestão de Pets"
-    let cols = ["Nome", "Raça", "Cor", "Sexo", "Ações"]
-    res.render('layout', {body:'pages/pets', title,cols, pets, error: ""})
-  })
-  .catch((error)=> {
-    console.log('Erro', error)
-    res.render('layout', {body:'pages/pets', title, error})
-  })
-})
-
-// POST NEW USER
-router.post("/", (req, res) => {
-  const { name, race, colour, gender } = req.body;
-  fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" }, 
-    body: JSON.stringify({ name, race, colour, gender })
-  }).then(async (res) => {
-    if (!res.ok){
-      const err = await res.json()
-      throw err
-    }
-    return res.json()
-  })
-  .then((user) => {
-    res.send(user)
-  })
-  .catch((error) =>{
-    res.status(500).send(error)
-=======
     // Passando currentUserRole para a view
     res.render('layout', {body:'pages/pets', title, cols, pets, error: "", currentUserRole: currentUserRole}); // <<-- MODIFICADO
   })
@@ -92,7 +49,6 @@ router.post("/", (req, res) => {
     console.log('Erro em /pets GET', error);
     // Em caso de outros erros, também redireciona para login ou uma página de erro
     res.redirect('/login'); 
->>>>>>> Stashed changes
   })
 });
 
@@ -162,14 +118,6 @@ router.put("/:id", (req, res) => {
 // DELETE PET
 router.delete("/:id", (req, res) => {
   const { id } = req.params;
-<<<<<<< Updated upstream
-  fetch(url+'/'+id, {
-    method: "DELETE",
-  }).then(async (res) => {
-    if (!res.ok){
-      const err = await res.json()
-      throw err
-=======
   const token = req.session.token || ""; // <<-- ADICIONADO
 
   if (!token) { // <<-- ADICIONADO verificação
@@ -186,7 +134,6 @@ router.delete("/:id", (req, res) => {
     if (!apiRes.ok){ // Corrigido para apiRes
       const err = await apiRes.json();
       throw err;
->>>>>>> Stashed changes
     }
     return apiRes.json();
   })
@@ -201,14 +148,6 @@ router.delete("/:id", (req, res) => {
 // GET PET BY ID (para editar)
 router.get("/:id", (req, res) => {
   const { id } = req.params;
-<<<<<<< Updated upstream
-  fetch(url+'/'+id, {
-    method: "GET",
-  }).then(async (res) => {
-    if (!res.ok){
-      const err = await res.json()
-      throw err
-=======
   const token = req.session.token || ""; // <<-- ADICIONADO
 
   if (!token) { // <<-- ADICIONADO verificação
@@ -226,7 +165,6 @@ router.get("/:id", (req, res) => {
     if (!apiRes.ok){ // Corrigido para apiRes
       const err = await apiRes.json();
       throw err;
->>>>>>> Stashed changes
     }
     return apiRes.json();
   })
