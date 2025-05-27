@@ -46,7 +46,16 @@
           <td><%= user.username %></td>
           <td><%= user.email %></td>
           <td><%= user.phone %></td>
-          <td><%= user.role %></td>
+          <td>
+            <%# Lógica para exibir o nome do cargo de forma amigável %>
+            <% if (user.role === 'ADM') { %>
+              Administrador
+            <% } else if (user.role === 'user') { %>
+              Usuário
+            <% } else { %>
+              <%= user.role %> <%# Mostra o valor bruto se não for ADM nem user %>
+            <% } %>
+          </td>
           <td>
             <button onclick="editUser('<%= user.id %>')">Editar</button>
             <button onclick="deleteUser('<%= user.id %>')">Excluir</button>

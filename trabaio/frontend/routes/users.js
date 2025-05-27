@@ -7,7 +7,7 @@ const url = "http://localhost:4000/users"; // URL base para o backend de usuári
 // Mantenha o código da sua rota GET / aqui como já ajustamos
 router.get('/',  function (req, res, next) {
   let title = "Gestão de Usuários";
-  let cols = ["Nome", "Email", "Telefone", "Role", "Ações"]; // Ajuste as colunas conforme seu EJS
+  let cols = ["Nome", "Email", "Telefone", "Cargo", "Ações"]; // Ajuste as colunas conforme seu EJS
   const token = req.session.token || "";
   let currentUserRole = null;
 
