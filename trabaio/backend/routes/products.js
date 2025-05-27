@@ -1,11 +1,12 @@
 var express = require('express');
 var router = express.Router();
 var sqlite3 = require('sqlite3');
+var verifyJWT = require('../auth/verify-token');
 
 const db = new sqlite3.Database('./database/database.db');
 
-// Criação da tabela produtos
-db.run(`CREATE TABLE IF NOT EXISTS produtos (
+// Criar a tabela de produtos, se não existir
+db.run(`CREATE TABLE IF NOT EXISTS products (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   nome TEXT,
   descricao TEXT,
@@ -14,73 +15,77 @@ db.run(`CREATE TABLE IF NOT EXISTS produtos (
   categoria TEXT
 )`, (err) => {
   if (err) {
-    console.error('Erro ao criar a tabela produtos:', err);
+    console.error('Erro ao criar a tabela products:', err);
   } else {
-    console.log('Tabela produtos criada com sucesso!');
+    console.log('Tabela products criada com sucesso!');
   }
 });
 
-// Criar novo produto
-router.post('/produtos', (req, res) => {
+// Criar produto
+router.post('/', verifyJWT, (req, res) => {
   const { nome, descricao, preco, estoque, categoria } = req.body;
-  db.run('INSERT INTO produtos (nome, descricao, preco, estoque, categoria) VALUES (?, ?, ?, ?, ?)',
+  db.run(
+    'INSERT INTO products (nome, descricao, preco, estoque, categoria) VALUES (?, ?, ?, ?, ?)',
     [nome, descricao, preco, estoque, categoria],
     (err) => {
       if (err) {
-        console.error('Erro ao criar o produto:', err);
-        return res.status(500).send({ error: 'Erro ao criar o produto' });
+        console.error('Erro ao inserir produto: ', err);
+        return res.status(500).send({ error: 'Erro ao cadastrar o produto' });
       }
-      res.status(201).send({ message: 'Produto criado com sucesso' });
-    });
+      res.status(201).send({ message: 'Produto cadastrado com sucesso' });
+    }
+  );
 });
 
 // Listar todos os produtos
-router.get('/produtos', (req, res) => {
-  db.all('SELECT * FROM produtos', (err, produtos) => {
+router.get('/', verifyJWT, (req, res) => {
+  db.all('SELECT * FROM products', (err, products) => {
     if (err) {
-      console.error('Erro ao buscar os produtos:', err);
-      return res.status(500).send({ error: 'Erro ao buscar os produtos' });
+      console.error('Erro ao buscar produtos: ', err);
+      return res.status(500).send({ error: 'Erro ao buscar produtos' });
     }
-    res.status(200).send(produtos);
+    res.status(200).send(products);
   });
 });
 
 // Buscar produto por ID
-router.get('/produtos/:id', (req, res) => {
+router.get('/:id', (req, res) => {
   const { id } = req.params;
-  db.get('SELECT * FROM produtos WHERE id = ?', [id], (err, produto) => {
+  db.get('SELECT * FROM products WHERE id = ?', [id], (err, row) => {
     if (err) {
-      console.error('Erro ao buscar o produto:', err);
-      return res.status(500).json({ error: 'Erro ao buscar o produto' });
+      console.error('Erro ao buscar produto: ', err);
+      return res.status(500).json({ error: 'Erro ao buscar produto' });
     }
-    if (!produto) {
+    if (!row) {
       return res.status(404).json({ error: 'Produto não encontrado' });
     }
-    res.status(200).json(produto);
+    res.status(200).json(row);
   });
 });
 
-// Atualizar completamente um produto
-router.put('/produtos/:id', (req, res) => {
+// Atualizar produto por completo
+router.put('/:id', (req, res) => {
   const { id } = req.params;
   const { nome, descricao, preco, estoque, categoria } = req.body;
 
-  db.run('UPDATE produtos SET nome = ?, descricao = ?, preco = ?, estoque = ?, categoria = ? WHERE id = ?',
+  db.run(
+    'UPDATE products SET nome = ?, descricao = ?, preco = ?, estoque = ?, categoria = ? WHERE id = ?',
     [nome, descricao, preco, estoque, categoria, id],
     function (err) {
       if (err) {
-        console.error('Erro ao atualizar o produto:', err);
+        console.error('Erro ao atualizar o produto: ', err);
         return res.status(500).json({ error: 'Erro ao atualizar o produto' });
       }
       if (this.changes === 0) {
         return res.status(404).json({ error: 'Produto não encontrado' });
       }
       res.status(200).json({ message: 'Produto atualizado com sucesso' });
-    });
+    }
+  );
 });
 
-// Atualização parcial de um produto
-router.patch('/produtos/:id', (req, res) => {
+// Atualizar parcialmente produto
+router.patch('/:id', (req, res) => {
   const { id } = req.params;
   const fields = req.body;
   const keys = Object.keys(fields);
@@ -92,10 +97,10 @@ router.patch('/produtos/:id', (req, res) => {
 
   const setClause = keys.map((key) => `${key} = ?`).join(', ');
 
-  db.run(`UPDATE produtos SET ${setClause} WHERE id = ?`, [...values, id], function (err) {
+  db.run(`UPDATE products SET ${setClause} WHERE id = ?`, [...values, id], function (err) {
     if (err) {
-      console.error('Erro ao atualizar o produto parcialmente:', err);
-      return res.status(500).json({ error: 'Erro ao atualizar o produto parcialmente' });
+      console.error('Erro ao atualizar parcialmente o produto: ', err);
+      return res.status(500).json({ error: 'Erro ao atualizar o produto' });
     }
     if (this.changes === 0) {
       return res.status(404).json({ error: 'Produto não encontrado' });
@@ -104,12 +109,12 @@ router.patch('/produtos/:id', (req, res) => {
   });
 });
 
-// Deletar um produto
-router.delete('/produtos/:id', (req, res) => {
+// Deletar produto
+router.delete('/:id', verifyJWT, (req, res) => {
   const { id } = req.params;
-  db.run('DELETE FROM produtos WHERE id = ?', [id], function (err) {
+  db.run('DELETE FROM products WHERE id = ?', [id], function (err) {
     if (err) {
-      console.error('Erro ao deletar o produto:', err);
+      console.error('Erro ao deletar o produto: ', err);
       return res.status(500).json({ error: 'Erro ao deletar o produto' });
     }
     if (this.changes === 0) {

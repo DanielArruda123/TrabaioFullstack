@@ -3,12 +3,31 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+
+//Libs Auth
+var rateLimit = require('express-rate-limit');
+var session = require('express-session')
+
+
 const cors = require('cors');
-
-
 var app = express();
 app.use(express.json());
 app.use(cors());
+
+//Configuração de limite de requisições
+const limiter = rateLimit({
+  windowMS: 15 * 60 * 1000,
+  max: 100,
+  keyGenerator: (req, res)=> req.headers['x-forwarded-for'] || req.connection.remoteAddress
+});
+
+//Configuração de sessão
+app.use(session({
+  secret: 'f7c74e23b069884c186e9c8f478b32522759e88e1d112ccf1e23ec25c2d4607b',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}))
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -17,6 +36,7 @@ var servicesRouter = require('./routes/services');
 var productsRouter = require('./routes/products');
 var tutorsRouter = require('./routes/tutors');
 var solicitationsRouter = require('./routes/solicitations');
+var authRouter = require('./routes/auth')
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -25,6 +45,7 @@ app.use('/tutors', tutorsRouter);
 app.use('/services', servicesRouter);
 app.use('/products', productsRouter);
 app.use('/solicitations', solicitationsRouter);
+app.use('/auth',limiter, authRouter)
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

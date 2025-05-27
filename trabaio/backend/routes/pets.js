@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var sqlite3 = require('sqlite3');
+var verifyJWT = require('../auth/verify-token')
 
 const db = new sqlite3.Database('./database/database.db');
 
@@ -20,7 +21,7 @@ const db = new sqlite3.Database('./database/database.db');
     });
 
 // Criar pet
-router.post('/', (req, res) => {
+router.post('/', verifyJWT, (req, res) => {
   const { name, race, colour, gender } = req.body;
   db.run(
     'INSERT INTO pets (name, race, colour, gender) VALUES (?, ?, ?, ?)',
@@ -37,7 +38,7 @@ router.post('/', (req, res) => {
 });
 
 // Listar todos os pets
-router.get('/', (req, res) => {
+router.get('/', verifyJWT, (req, res) => {
   db.all('SELECT * FROM pets', (err, pets) => {
     if (err) {
       console.log('Erro ao buscar pets: ', err);
@@ -109,7 +110,7 @@ router.patch('/:id', (req, res) => {
 });
 
 // Deletar pet
-router.delete('/:id', (req, res) => {
+router.delete('/:id', verifyJWT, function(req, res){
   const { id } = req.params;
   db.run('DELETE FROM pets WHERE id = ?', [id], function (err) {
     if (err) {

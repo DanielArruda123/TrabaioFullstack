@@ -1,10 +1,19 @@
 var express = require('express');
 var router = express.Router();
 var sqlite3 = require('sqlite3');
+var jwt = require('jsonwebtoken');
+var bcrypt = require('bcryptjs');
 
 const db = new sqlite3.Database('./database/database.db')
 
 // Modificação: Adicionar a coluna 'role' com um valor padrão 'user'
+//  db.run(`DROP TABLE IF EXISTS users`, (err) => {
+//             if (err) {
+//                 console.error("Erro ao dropar a tabela users:", err.message);
+//             } else {
+//                 console.log("Tabela users dropada (se existia).");
+//             }
+//         });
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE,
