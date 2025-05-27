@@ -1,0 +1,114 @@
+<h1>
+  <%= title %>
+</h1>
+
+<form id="userForm" action="">
+  <input type="hidden" name="id" id="id">
+  <label for="username">Nome</label>
+  <input name="username" id="username" type="text"><br>
+
+  <label for="password">Senha</label>
+  <input name="password" id="password" type="text"><br>
+
+  <label for="email">Email</label>
+  <input name="email" id="email" type="text"><br>
+
+  <label for="phone">Telefone</label>
+  <input name="phone" id="phone" type="text">
+
+  <button type="submit">Enviar</button>
+  <button type="reset">Cancelar</button>
+</form>
+
+<span id="error"></span>
+
+    <%if (error){%>
+      <span %=error%></span>
+      <%}%>
+
+        <table>
+          <thead>
+            <tr>
+              <th>COL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for(let user of users) { %>
+              <tr>
+                <% for(let prop in user) { %>
+                  <td>
+                    <%= user[prop] %>
+                  </td>
+                  <% } %>
+                    <td>
+                      <button onclick="editUser(<%=user.id%>)">Editar</button>
+                      <button onclick="deleteUser(<%=user.id%>)">Deletar</button>
+                    </td>
+              </tr>
+              <% } %>
+          </tbody>
+        </table>
+    <script>
+      const form = document.getElementById('userForm')
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault()
+
+        const formData = new formData(form)
+        const user = {}
+        formData.forEach((v, k) => {
+          user[k] = v
+        })
+
+        let method =  id
+        let url = ""
+
+        fetch("/users", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(user)
+        })
+          .then((res) => { return res.json() })
+          .then((user) => { console.log('foi salvo', user) })
+          .catch((error) => { document.getElementById('error').innerText = error })
+      })
+
+      function editUser(id){
+        console.log(id)
+        fetch("/users/"+id, {
+          method: "GET",
+        }).then(async (res) => {
+          if (!res.ok) {
+           const err = await res.json();
+             throw err; }
+              return res.json(); })
+          .then((user) => { console.log('foi salvo',usuario user)
+            for(let prop in user){
+              const input = document.querySelector(`input[name=${prop}]`)
+              input ? input.value =  user[prop] : input.value = ""
+            }
+           })
+          .catch((error) => { document.getElementById('error').innerText = error })
+      }
+
+      function deleteUser(id) {
+  console.log(id);
+  fetch("/users/" + id, {
+    method: "DELETE"
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json();
+        throw err;
+      }
+      return res.json();
+    })
+    .then((user) => {
+      window.location.reload();
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error;
+    });
+}
+
+    </script>

@@ -1,0 +1,153 @@
+<h1><%= title %></h1>
+
+<form id="productForm" action="">
+  <input required type="hidden" name="id" id="id">
+
+  <label for="nome">Nome</label>
+  <input required name="nome" id="nome" type="text"><br>
+
+  <label for="descricao">Descrição</label>
+  <input required name="descricao" id="descricao" type="text"><br>
+
+  <label for="preco">Preço</label>
+  <input required name="preco" id="preco" type="number" step="0.01"><br>
+
+  <label for="estoque">Estoque</label>
+  <input required name="estoque" id="estoque" type="number"><br>
+
+  <label for="categoria">Categoria</label>
+  <input required name="categoria" id="categoria" type="text"><br>
+
+  <button type="submit">Enviar</button>
+  <button type="reset">Cancelar</button>
+</form>
+
+<span id="error"></span>
+
+<% if (error) { %>
+  <span><%= JSON.stringify(error) %></span>
+<% } %>
+
+<!-- Botão para mostrar/esconder a tabela -->
+<button id="toggleTableBtn">Mostrar Tabela</button>
+
+<table id="productTable" style="display: none; margin-top: 10px;">
+  <thead>
+    <tr>
+      <th>ID</th>
+    <% for (let col of cols) { %>
+      <th><%= col %></th>
+    <% } %>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (products && products.length > 0) { %>
+      <% products.forEach(product => { %>
+        <tr>
+          <td><%= product.id %></td>
+          <td><%= product.nome %></td>
+          <td><%= product.descricao %></td>
+          <td>R$ <%= product.preco.toFixed(2) %></td>
+          <td><%= product.estoque %></td>
+          <td><%= product.categoria %></td>
+          <td>
+            <button onclick="editProduct('<%= product.id %>')">Editar</button>
+            <button onclick="deleteProduct('<%= product.id %>')">Excluir</button>
+          </td>
+        </tr>
+      <% }) %>
+    <% } else { %>
+      <tr>
+        <td colspan="<%= cols.length + 1 %>">Nenhum produto encontrado.</td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+  // Toggle da tabela com jQuery
+  $(document).ready(function () {
+    $('#toggleTableBtn').click(function () {
+      $('#productTable').slideToggle(300);
+      const atual = $(this).text();
+      $(this).text(atual === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+    });
+  });
+
+  const form = document.getElementById('productForm');
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const product = mountDataForm();
+
+    const id = document.getElementById("id").value;
+    const METHOD = id ? 'PUT' : 'POST';
+    const URL = id ? `/products/${id}` : '/products';
+
+    createOrUpdate(product, URL, METHOD);
+  });
+
+  function createOrUpdate(product, URL, METHOD) {
+    fetch(URL, {
+      method: METHOD,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(product)
+    })
+    .then(async (res) => await checkERROR(res))
+    .then(() => {
+      form.reset();
+      window.location.reload();
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || "Erro ao salvar";
+    });
+  }
+
+  function editProduct(id) {
+    fetch("/products/" + id, { method: "GET" })
+    .then(async (res) => await checkERROR(res))
+    .then((product) => {
+      for (let prop in product) {
+        const input = document.querySelector(`input[name="${prop}"]`);
+        if (input) input.value = product[prop];
+      }
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || error;
+    });
+  }
+
+  function deleteProduct(id) {
+    fetch("/products/" + id, { method: "DELETE" })
+    .then(async (res) => await checkERROR(res))
+    .then(() => {
+      window.location.reload();
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = JSON.stringify(error);
+    });
+  }
+
+  async function checkERROR(res) {
+    if (!res.ok) {
+      let err = { message: 'Erro desconhecido' };
+      try {
+        err = await res.json();
+      } catch (e) {}
+      throw err;
+    }
+    return res.json();
+  }
+
+  function mountDataForm() {
+    const formData = new FormData(form);
+    const product = {};
+    formData.forEach((v, k) => {
+      product[k] = v;
+    });
+    return product;
+  }
+</script>

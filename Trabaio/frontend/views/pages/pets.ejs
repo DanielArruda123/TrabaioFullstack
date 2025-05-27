@@ -1,0 +1,155 @@
+<h1>
+  <%= title %>
+</h1>
+
+<form id="petForm" action="">
+  <input required type="hidden" name="id" id="id">
+
+  <label for="name">Nome</label>
+  <input required name="name" id="name" type="text"><br>
+
+  <label for="race">Raça</label>
+  <input required name="race" id="race" type="text"><br>
+
+  <label for="colour">Cor</label>
+  <input required name="colour" id="colour" type="text"><br>
+
+  <label for="gender">Sexo</label>
+  <input required name="gender" id="gender" type="text"><br>
+
+  <button type="submit">Enviar</button>
+  <button type="reset">Cancelar</button>
+</form>
+
+<span id="error"></span>
+
+<% if (error) { %>
+  <span><%= JSON.stringify(error)%></span>
+<% } %>
+
+<!-- Botão para mostrar/esconder tabela -->
+<button id="toggleTableBtn">Mostrar Tabela</button>
+
+<table id="petTable" style="display: none; margin-top: 10px;">
+  <thead>
+    <tr>
+      <th>ID</th>
+    <% for (let col of cols) { %>
+      <th><%= col %></th>
+    <% } %>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (pets && pets.length > 0) { %>
+      <% pets.forEach(pet => { %>
+        <tr>
+          <td><%= pet.id %></td>
+          <td><%= pet.name %></td>
+          <td><%= pet.race %></td>
+          <td><%= pet.colour %></td>
+          <td><%= pet.gender %></td>
+          <td>
+            <button onclick="editPet('<%= pet.id %>')">Editar</button>
+            <button onclick="deletePet('<%= pet.id %>')">Excluir</button>
+          </td>
+        </tr>
+      <% }); %>
+    <% } else { %>
+      <tr>
+        <td colspan="<%= cols.length + 1 %>">Nenhum pet encontrado.</td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+  // Toggle da tabela
+  $(document).ready(function() {
+    $('#toggleTableBtn').click(function() {
+      $('#petTable').slideToggle(300);
+      const txt = $(this).text();
+      $(this).text(txt === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+    });
+  });
+
+  const form = document.getElementById('petForm');
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const pet = mountDataForm();
+
+    let id = document.getElementById("id").value;
+    let METHOD = id ? `PUT` : 'POST';
+    let URL = id ? `/pets/${id}` : '/pets';
+
+    createOrUpdate(pet, URL, METHOD);
+  });
+
+  function createOrUpdate(pet, URL, METHOD) {
+    fetch(URL, {
+      method: METHOD,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(pet)
+    })
+    .then(async (res) => { return await checkERROR(res); })
+    .then(() => {
+      form.reset();
+      window.location.reload();
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || "Erro ao salvar";
+    });
+  }
+
+  function editPet(id) {
+    fetch("/pets/" + id, {
+      method: "GET"
+    })
+    .then(async (res) => { return await checkERROR(res); })
+    .then((pet) => {
+      for (let prop in pet) {
+        const input = document.querySelector(`input[name="${prop}"]`);
+        if (input) input.value = pet[prop];
+      }
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || error;
+    });
+  }
+
+  function deletePet(id) {
+    fetch("/pets/" + id, {
+      method: "DELETE"
+    })
+    .then(async (res) => { return await checkERROR(res); })
+    .then(() => {
+      window.location.reload();
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = JSON.stringify(error);
+    });
+  }
+
+  async function checkERROR(res) {
+    if (!res.ok) {
+      let err = { message: 'Erro desconhecido' };
+      try {
+        err = await res.json();
+      } catch (e) {}
+      throw err;
+    }
+    return res.json();
+  }
+
+  function mountDataForm() {
+    const formData = new FormData(form);
+    const pet = {};
+    formData.forEach((v, k) => {
+      pet[k] = v;
+    });
+    return pet;
+  }
+</script>
