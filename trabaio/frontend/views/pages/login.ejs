@@ -1,0 +1,146 @@
+<%# Exemplo: views/pages/login.ejs %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Cadastro</title>
+    <%# Se esta página é renderizada DENTRO do seu layout.ejs principal, %>
+    <%# os links de CSS e JS do Materialize abaixo podem ser desnecessários aqui, %>
+    <%# pois já estariam no layout.ejs. Verifique sua estrutura. %>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="/css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+    <link href="/css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col s12 m6 offset-m3">
+                <div id="login-section">
+                    <h3 class="center-align">Login</h3>
+                    <form id="loginForm" action="/login" method="POST">
+                        <div class="input-field">
+                            <%# ID do username do login: login_username %>
+                            <input type="text" name="username" id="login_username" required>
+                            <label for="login_username">Username</label>
+                        </div>
+                        <div class="input-field">
+                             <%# ID da password do login: login_password %>
+                            <input type="password" name="password" id="login_password" required>
+                            <label for="login_password">Password</label>
+                        </div>
+                        <div class="center-align">
+                            <button type="submit" class="waves-effect waves-light btn"><i class="material-icons left">person</i>Login</button>
+                            <button type="button" id="showRegister" class="waves-effect waves-light btn"><i class="material-icons left">add</i>Cadastrar</button>
+                            <br>
+                            <%# Exibe erros de login (passado por POST /login em routes/auth.js) %>
+                            <% if (typeof error !== 'undefined' && error && error.error) { %>
+                                <p style="color:red; margin-top: 10px;"><%= error.error %></p>
+                            <% } %>
+                            <%# Exibe mensagem de sucesso do cadastro (passado por GET /login em routes/auth.js) %>
+                            <% if (typeof registerSuccess !== 'undefined' && registerSuccess) { %>
+                                <p style="color: green; margin-top: 10px;"><%= registerSuccess %></p>
+                            <% } %>
+                            <%# Exibe mensagem de erro do cadastro (passado por GET /login em routes/auth.js) %>
+                            <% if (typeof registerError !== 'undefined' && registerError && registerError.error) { %>
+                                <p style="color: red; margin-top: 10px;"><%= registerError.error %></p>
+                            <% } %>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="register-section" style="display:none;">
+                    <h3 class="center-align">Cadastro</h3>
+                    <%# MODIFICAÇÃO 1: action alterado para "/users" %>
+                    <form id="registerForm" action="/users" method="POST"> 
+                        <div class="input-field">
+                            <%# MODIFICAÇÃO 2: 'name' do input mudado para "username", id e for atualizados %>
+                            <input type="text" name="username" id="reg_username" required>
+                            <label for="reg_username">Nome de Usuário (Username)</label>
+                        </div>
+                        <div class="input-field">
+                            <input type="email" name="email" id="reg_email" required>
+                            <label for="reg_email">Email</label>
+                        </div>
+                        <div class="input-field">
+                            <input type="text" name="phone" id="reg_phone" required>
+                            <label for="reg_phone">Telefone</label>
+                        </div>
+                        <div class="input-field">
+                            <input type="password" name="password" id="reg_password" required>
+                            <label for="reg_password">Senha</label>
+                        </div>
+                        <div class="center-align">
+                            <button type="submit" class="waves-effect waves-light btn"><i class="material-icons left">add</i>Cadastrar</button>
+                            <button type="button" id="showLogin" class="waves-effect waves-light btn"><i class="material-icons left">person</i>Login</button>
+                            <%# As mensagens de erro/sucesso do cadastro serão mostradas na seção de login acima %>
+                            <%# após o redirecionamento pela rota POST /users %>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/js/materialize.js"></script> <%# Certifique-se que o caminho está correto %>
+    <script>
+        $(document).ready(function(){
+            M.updateTextFields(); // Para inicializar as labels do Materialize
+
+            $('#showRegister').on('click', function(){
+                $('#login-section').hide();
+                $('#register-section').show();
+                M.updateTextFields(); 
+            });
+            $('#showLogin').on('click', function(){
+                $('#register-section').hide();
+                $('#login-section').show();
+                M.updateTextFields(); 
+            });
+
+            // Validação básica do lado do cliente que você já tinha
+            $('#loginForm').on('submit', function(event){
+                var username = $('#login_username').val(); // ID do campo de username do login
+                var password = $('#login_password').val(); // ID do campo de password do login
+                if(!username || !password){
+                    event.preventDefault();
+                    M.toast({html: 'Login: Por favor, preencha todos os campos', classes: 'red rounded'});
+                }
+            });
+            $('#registerForm').on('submit', function(event){
+                var username = $('#reg_username').val(); // Usando novo ID
+                var email = $('#reg_email').val();
+                var phone = $('#reg_phone').val();
+                var password = $('#reg_password').val();
+                if(!username || !email || !phone || !password){
+                    event.preventDefault();
+                    M.toast({html: 'Cadastro: Por favor, preencha todos os campos', classes: 'red rounded'});
+                }
+                // O formulário será enviado para action="/users" method="POST"
+            });
+
+            // Para exibir mensagens passadas via query parameters (após redirecionamento do cadastro)
+            const urlParams = new URLSearchParams(window.location.search);
+            const registerStatus = urlParams.get('status');
+            const registerMsg = urlParams.get('message');
+
+            if (registerStatus === 'register_success') {
+                M.toast({html: 'Cadastro realizado com sucesso! Faça o login.', classes: 'green rounded'});
+                if (window.history.replaceState) { // Limpa a URL para não mostrar o toast de novo ao recarregar
+                    const cleanURL = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.hash;
+                    window.history.replaceState({path: cleanURL}, '', cleanURL);
+                }
+            } else if (registerStatus === 'register_error') {
+                M.toast({html: decodeURIComponent(registerMsg || 'Erro ao realizar o cadastro.'), classes: 'red rounded'});
+                if (window.history.replaceState) { // Limpa a URL
+                    const cleanURL = window.location.protocol + "//" + window.location.host + window.location.pathname + window.location.hash;
+                    window.history.replaceState({path: cleanURL}, '', cleanURL);
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
