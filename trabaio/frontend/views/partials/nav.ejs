@@ -1,6 +1,6 @@
-<nav class="light-blue lighten-1" role="navigation">
+<nav class="orange darken-2"  role="navigation">
   <div class="nav-wrapper container">
-    <a id="logo-container" href="#" class="brand-logo"><img src="/trabaio/frontend/public/img/logo-pets.png" alt="logo"></a>
+    <a id="logo-container" href="#" class="brand-logo"><img src="/img/logo-pets.png" alt="logo"></a>
     <ul class="right hide-on-med-and-down">
       <li><a href="/"><i class="material-icons left">home</i>Home</a></li>
       <li><a href="/users"><i class="material-icons left">people</i>Usuários</a></li>
@@ -38,3 +38,48 @@
     </a>
   </div>
 </nav>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  // Controle de exibição de links por permissão
+  // Exemplo de configuração: altere conforme o usuário logado e permissões
+  // Exemplo: const userPermissions = ['home', 'login', 'users', 'pets'];
+  // Para visitante: const userPermissions = ['home', 'login'];
+  // Para admin: const userPermissions = ['home', 'users', 'pets', 'products', 'services', 'tutors', 'solicitations'];
+  const userPermissions = window.userPermissions || ['home', 'login']; // Defina window.userPermissions no backend ou JS global
+  
+  //ERICK, VER SE ISSO AQUI (PERMOISSOES), PRESTA PRA ALGUMA COISA QUANDO TU IMPLEMENTAR O AS RESTRICOES PARA CADA USUARIO, SE N APAGA OU ME AVISA
+  // Mapeamento dos hrefs para permissões
+  const linkPermissionMap = {
+    '/': 'home',
+    '/login': 'login',
+    '/users': 'users',
+    '/pets': 'pets',
+    '/products': 'products',
+    '/services': 'services',
+    '/tutors': 'tutors',
+    '/solicitations': 'solicitations'
+  };
+
+  $(document).ready(function(){
+    // Desktop
+    $("nav .nav-wrapper ul li a").each(function(){
+      var href = $(this).attr('href');
+      var perm = linkPermissionMap[href];
+      if(perm && userPermissions.indexOf(perm) === -1) {
+        $(this).parent().hide();
+      } else {
+        $(this).parent().show();
+      }
+    });
+    // Mobile
+    $("#nav-mobile li a").each(function(){
+      var href = $(this).attr('href');
+      var perm = linkPermissionMap[href];
+      if(perm && userPermissions.indexOf(perm) === -1) {
+        $(this).parent().hide();
+      } else {
+        $(this).parent().show();
+      }
+    });
+  });
+</script>
