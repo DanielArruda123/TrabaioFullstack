@@ -1,4 +1,3 @@
-<!-- filepath: views/pages/solicitations.ejs -->
 <h1><%= title %></h1>
 
 <form id="solicitationForm" action="">
@@ -29,21 +28,23 @@
   <span><%= JSON.stringify(error) %></span>
 <% } %>
 
-<table>
+<!-- Botão para mostrar/esconder tabela -->
+<button id="toggleTableBtn">Mostrar Tabela</button>
+
+<table id="solicitationTable" style="display: none; margin-top: 10px;">
   <thead>
     <tr>
-      <th>Tutor</th>
-      <th>Pet</th>
-      <th>Serviço</th>
-      <th>Data/Hora</th>
-      <th>Status</th>
-      <th>Ações</th>
+      <th>ID</th>
+    <% for (let col of cols) { %>
+      <th><%= col %></th>
+    <% } %>
     </tr>
   </thead>
   <tbody>
     <% if (solicitations && solicitations.length > 0) { %>
       <% solicitations.forEach(solicitation => { %>
         <tr>
+          <td><%= solicitation.id %></td>
           <td><%= solicitation.tutor %></td>
           <td><%= solicitation.pet %></td>
           <td><%= solicitation.servico %></td>
@@ -63,7 +64,19 @@
   </tbody>
 </table>
 
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
+  // Botão mostrar/esconder a tabela
+  $(document).ready(function () {
+    $('#toggleTableBtn').click(function () {
+      $('#solicitationTable').slideToggle(300);
+      const atual = $(this).text();
+      $(this).text(atual === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+    });
+  });
+
   const form = document.getElementById('solicitationForm');
 
   form.addEventListener("submit", (e) => {
