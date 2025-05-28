@@ -11,8 +11,8 @@
   <input required name="endereco" id="endereco" type="text"><br>
   <label>Pets Associados (IDs separados por vírgula)</label>
   <input name="pets_associados" id="pets_associados" type="text"><br>
-  <button type="submit">Enviar</button>
-  <button type="reset">Cancelar</button>
+  <button class="btn waves-effect waves-light btn-main" type="submit">Enviar</button>
+  <button class="btn waves-effect waves-light btn-main" type="reset">Cancelar</button>
 </form>
 
 <span id="error"></span>
@@ -38,8 +38,8 @@
           <td><%= tutor.endereco %></td>
           <td><%= tutor.pets_associados %></td>
           <td>
-            <button onclick="editTutor('<%= tutor.id %>')">Editar</button>
-            <button onclick="deleteTutor('<%= tutor.id %>')">Excluir</button>
+            <button class="btn btn-main" onclick="editTutor('<%= tutor.id %>')">Editar</button>
+            <button class="btn btn-main" onclick="deleteTutor('<%= tutor.id %>')">Excluir</button>
           </td>
         </tr>
       <% }) %>

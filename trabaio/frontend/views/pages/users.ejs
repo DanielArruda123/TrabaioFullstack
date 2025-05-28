@@ -17,10 +17,10 @@
   <label for="phone">Telefone</label>
   <input required name="phone" id="phone" type="tel"><br>
 
-  <button class="btn waves-effect waves-light" type="submit" name="action">Enviar
+  <button class="btn waves-effect waves-light btn-main" type="submit" name="action">Enviar
     <i class="material-icons right">send</i>
   </button>
-  <button class="btn waves-effect waves-light" type="reset" name="action">Limpar
+  <button class="btn waves-effect waves-light btn-main" type="reset" name="action">Limpar
     <i class="material-icons right">delete_sweep</i>
   </button>
 </form>
@@ -48,8 +48,8 @@
           <td><%= user.email %></td>
           <td><%= user.phone %></td>
           <td>
-            <button onclick="editUser('<%= user.id %>')">Editar</button>
-            <button onclick="deleteUser('<%= user.id %>')">Excluir</button>
+            <button class="btn btn-main" onclick="editUser('<%= user.id %>')">Editar</button>
+            <button class="btn btn-main" onclick="deleteUser('<%= user.id %>')">Excluir</button>
           </td>
         </tr>
       <% }); %>

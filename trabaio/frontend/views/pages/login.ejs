@@ -1,100 +1,87 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login/Cadastro</title>
-
-</head>
-<body>
-    <div class="container">
-        <div class="row">
-            <div class="col s12 m6 offset-m3">
-                <div id="login-section">
-                    <h3 class="center-align">Login</h3>
-                    <form id="loginForm" action="/login" method="POST">
-                        <div class="input-field">
-                            <input type="text" name="username" id="username" required>
-                            <label for="username">Username</label>
-                        </div>
-                        <div class="input-field">
-                            <input type="password" name="password" id="password" required>
-                            <label for="password">Password</label>
-                        </div>
-                        <div class="center-align">
-                            <button type="submit" class="waves-effect waves-light btn"><i class="material-icons left">person</i>Login</button>
-                            <button type="button" id="showRegister" class="waves-effect waves-light btn"><i class="material-icons left">add</i>Cadastrar</button>
-                            <br>
-                            <% if (error) { %>
-                                <span><%=error.error%></span>
-                            <% } %>
-                        </div>
-                    </form>
-                </div>
-                <div id="register-section" style="display:none;">
-                    <h3 class="center-align">Cadastro</h3>
-                    <form id="registerForm" action="/register" method="POST">
-                        <div class="input-field">
-                            <input type="text" name="name" id="reg_name" required>
-                            <label for="reg_name">Nome</label>
-                        </div>
-                        <div class="input-field">
-                            <input type="email" name="email" id="reg_email" required>
-                            <label for="reg_email">Email</label>
-                        </div>
-                        <div class="input-field">
-                            <input type="text" name="phone" id="reg_phone" required>
-                            <label for="reg_phone">Telefone</label>
-                        </div>
-                        <div class="input-field">
-                            <input type="password" name="password" id="reg_password" required>
-                            <label for="reg_password">Senha</label>
-                        </div>
-                        <div class="center-align">
-                            <button type="submit" class="waves-effect waves-light btn"><i class="material-icons left">add</i>Cadastrar</button>
-                            <button type="button" id="showLogin" class="waves-effect waves-light btn"><i class="material-icons left">person</i>Login</button>
-                        </div>
-                    </form>
-                </div>
+<div class="container">
+    <div class="row">
+        <div class="col s12 m6 offset-m3">
+            <div id="login-section">
+                <h3 class="center-align">Login</h3>
+                <form id="loginForm" action="/login" method="POST">
+                    <div class="input-field">
+                        <input type="text" name="username" id="username" required>
+                        <label for="username">Username</label>
+                    </div>
+                    <div class="input-field">
+                        <input type="password" name="password" id="password" required>
+                        <label for="password">Password</label>
+                    </div>
+                    <div class="center-align">
+                        <button type="submit" class="waves-effect waves-light btn btn-main"><i class="material-icons left">person</i>Login</button>
+                        <button type="button" id="showRegister" class="waves-effect waves-light btn btn-main"><i class="material-icons left">add</i>Cadastrar</button>
+                        <br>
+                        <% if (error) { %>
+                            <span><%=error.error%></span>
+                        <% } %>
+                    </div>
+                </form>
+            </div>
+            <div id="register-section" style="display:none;">
+                <h3 class="center-align">Cadastro</h3>
+                <form id="registerForm" action="/register" method="POST">
+                    <div class="input-field">
+                        <input type="text" name="name" id="reg_name" required>
+                        <label for="reg_name">Nome</label>
+                    </div>
+                    <div class="input-field">
+                        <input type="email" name="email" id="reg_email" required>
+                        <label for="reg_email">Email</label>
+                    </div>
+                    <div class="input-field">
+                        <input type="text" name="phone" id="reg_phone" required>
+                        <label for="reg_phone">Telefone</label>
+                    </div>
+                    <div class="input-field">
+                        <input type="password" name="password" id="reg_password" required>
+                        <label for="reg_password">Senha</label>
+                    </div>
+                    <div class="center-align">
+                        <button type="submit" class="waves-effect waves-light btn btn-main"><i class="material-icons left">add</i>Cadastrar</button>
+                        <button type="button" id="showLogin" class="waves-effect waves-light btn btn-main"><i class="material-icons left">arrow_back</i>Voltar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function(){
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function(){
+        M.updateTextFields();
+        // Alternância entre login e cadastro usando jQuery
+        $('#showRegister').on('click', function(){
+            $('#login-section').hide();
+            $('#register-section').show();
             M.updateTextFields();
-            // Alternância entre login e cadastro usando jQuery
-            $('#showRegister').on('click', function(){
-                $('#login-section').hide();
-                $('#register-section').show();
-                M.updateTextFields();
-            });
-            $('#showLogin').on('click', function(){
-                $('#register-section').hide();
-                $('#login-section').show();
-                M.updateTextFields();
-            });
-            $('#loginForm').on('submit', function(event){
-                var username = $('#username').val();
-                var password = $('#password').val();
-                if(!username || !password){
-                    event.preventDefault();
-                    M.toast({html: 'Por favor, preencha todos os campos', classes: 'red'});
-                }
-            });
-            $('#registerForm').on('submit', function(event){
-                var name = $('#reg_name').val();
-                var email = $('#reg_email').val();
-                var phone = $('#reg_phone').val();
-                var password = $('#reg_password').val();
-                if(!name || !email || !phone || !password){
-                    event.preventDefault();
-                    M.toast({html: 'Por favor, preencha todos os campos', classes: 'red'});
-                }
-            });
         });
-    </script>
-
-</body>
-</html>
+        $('#showLogin').on('click', function(){
+            $('#register-section').hide();
+            $('#login-section').show();
+            M.updateTextFields();
+        });
+        $('#loginForm').on('submit', function(event){
+            var username = $('#username').val();
+            var password = $('#password').val();
+            if(!username || !password){
+                event.preventDefault();
+                M.toast({html: 'Por favor, preencha todos os campos', classes: 'red'});
+            }
+        });
+        $('#registerForm').on('submit', function(event){
+            var name = $('#reg_name').val();
+            var email = $('#reg_email').val();
+            var phone = $('#reg_phone').val();
+            var password = $('#reg_password').val();
+            if(!name || !email || !phone || !password){
+                event.preventDefault();
+                M.toast({html: 'Por favor, preencha todos os campos', classes: 'red'});
+            }
+        });
+    });
+</script>

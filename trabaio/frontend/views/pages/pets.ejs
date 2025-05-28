@@ -17,8 +17,8 @@
   <label for="gender">Sexo</label>
   <input required name="gender" id="gender" type="text"><br>
 
-  <button type="submit">Enviar</button>
-  <button type="reset">Cancelar</button>
+  <button class="btn waves-effect waves-light btn-main" type="submit">Enviar</button>
+  <button class="btn waves-effect waves-light btn-main" type="reset">Cancelar</button>
 </form>
 
 <span id="error"></span>
@@ -46,8 +46,8 @@
           <td><%= pet.colour %></td>
           <td><%= pet.gender %></td>
           <td>
-            <button onclick="editPet('<%= pet.id %>')">Editar</button>
-            <button onclick="deletePet('<%= pet.id %>')">Excluir</button>
+            <button class="btn btn-main" onclick="editPet('<%= pet.id %>')">Editar</button>
+            <button class="btn btn-main" onclick="deletePet('<%= pet.id %>')">Excluir</button>
           </td>
         </tr>
       <% }); %>

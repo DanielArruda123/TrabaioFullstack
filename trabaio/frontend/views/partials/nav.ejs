@@ -40,26 +40,7 @@
 </nav>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-  // Controle de exibição de links por permissão
-  // Exemplo de configuração: altere conforme o usuário logado e permissões
-  // Exemplo: const userPermissions = ['home', 'login', 'users', 'pets'];
-  // Para visitante: const userPermissions = ['home', 'login'];
-  // Para admin: const userPermissions = ['home', 'users', 'pets', 'products', 'services', 'tutors', 'solicitations'];
-  const userPermissions = window.userPermissions || ['home', 'login']; // Defina window.userPermissions no backend ou JS global
-  
-  //ERICK, VER SE ISSO AQUI (PERMOISSOES), PRESTA PRA ALGUMA COISA QUANDO TU IMPLEMENTAR O AS RESTRICOES PARA CADA USUARIO, SE N APAGA OU ME AVISA
-  // Mapeamento dos hrefs para permissões
-  const linkPermissionMap = {
-    '/': 'home',
-    '/login': 'login',
-    '/users': 'users',
-    '/pets': 'pets',
-    '/products': 'products',
-    '/services': 'services',
-    '/tutors': 'tutors',
-    '/solicitations': 'solicitations'
-  };
-
+  // Remove qualquer lógica de permissão temporariamente para mostrar todos os links
   $(document).ready(function(){
     // Desktop
     $("nav .nav-wrapper ul li a").each(function(){
