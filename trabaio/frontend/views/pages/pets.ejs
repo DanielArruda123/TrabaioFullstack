@@ -27,10 +27,13 @@
   <span><%= JSON.stringify(error)%></span>
 <% } %>
 
-<table>
+<!-- Botão para mostrar/esconder tabela -->
+<button id="toggleTableBtn">Mostrar Tabela</button>
+
+<table id="petTable" style="display: none; margin-top: 10px;">
   <thead>
     <tr>
-      <th>ID</th> <!-- nova coluna -->
+      <th>ID</th>
     <% for (let col of cols) { %>
       <th><%= col %></th>
     <% } %>
@@ -53,13 +56,25 @@
       <% }); %>
     <% } else { %>
       <tr>
-        <td colspan="<%= cols.length %>">Nenhum pet encontrado.</td>
+        <td colspan="<%= cols.length + 1 %>">Nenhum pet encontrado.</td>
       </tr>
     <% } %>
   </tbody>
 </table>
 
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
+  // Toggle da tabela
+  $(document).ready(function() {
+    $('#toggleTableBtn').click(function() {
+      $('#petTable').slideToggle(300);
+      const txt = $(this).text();
+      $(this).text(txt === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+    });
+  });
+
   const form = document.getElementById('petForm');
 
   form.addEventListener("submit", (e) => {

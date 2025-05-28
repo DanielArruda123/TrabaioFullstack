@@ -22,19 +22,23 @@
   <span><%= JSON.stringify(error) %></span>
 <% } %>
 
-<table>
+<!-- Botão para mostrar/esconder tabela -->
+<button id="toggleTableBtn">Mostrar Tabela</button>
+
+<table id="serviceTable" style="display: none; margin-top: 10px;">
   <thead>
-    <tr>
-      <th>Nome</th>
-      <th>Descrição</th>
-      <th>Preço</th>
-      <th>Ações</th>
+   <tr>
+      <th>ID</th>
+    <% for (let col of cols) { %>
+      <th><%= col %></th>
+    <% } %>
     </tr>
   </thead>
   <tbody>
     <% if (services && services.length > 0) { %>
       <% services.forEach(service => { %>
         <tr>
+          <td><%= service.id %></td>
           <td><%= service.nome %></td>
           <td><%= service.descricao %></td>
           <td>R$ <%= parseFloat(service.preco).toFixed(2) %></td>
@@ -52,7 +56,19 @@
   </tbody>
 </table>
 
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
+  // Alternar exibição da tabela com jQuery
+  $(document).ready(function () {
+    $('#toggleTableBtn').click(function () {
+      $('#serviceTable').slideToggle(300);
+      const atual = $(this).text();
+      $(this).text(atual === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+    });
+  });
+
   const form = document.getElementById('serviceForm');
 
   form.addEventListener("submit", (e) => {
