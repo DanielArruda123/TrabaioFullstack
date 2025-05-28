@@ -1,11 +1,12 @@
 var express = require('express');
 var router = express.Router();
 var sqlite3 = require('sqlite3');
-var verifyJWT = require('../auth/verify-token');
+const verifyJWT = require('../auth/verify-token'); // Para verificar se está logado
+const verifyAdmin = require('../auth/verifyAdmin');   // Para verificar se é ADM
 
-const db = new sqlite3.Database('./database/database.db');
+const db = require('../database/config'); // Caminho relativo de 'routes' para 'database/config.js'
 
-// Criar a tabela de serviços, se não existir
+// Criação da tabela de serviços (sem alterações)
 db.run(`CREATE TABLE IF NOT EXISTS servicos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   nome TEXT,
@@ -19,23 +20,23 @@ db.run(`CREATE TABLE IF NOT EXISTS servicos (
   }
 });
 
-// Criar serviço
-router.post('/', verifyJWT, (req, res) => {
+// Criar serviço - PROTEGIDO POR verifyAdmin
+router.post('/', verifyAdmin, (req, res) => {
   const { nome, descricao, preco } = req.body;
   db.run(
     'INSERT INTO servicos (nome, descricao, preco) VALUES (?, ?, ?)',
     [nome, descricao, preco],
-    (err) => {
+    function(err) {
       if (err) {
         console.error('Erro ao criar o serviço:', err);
         return res.status(500).send({ error: 'Erro ao criar o serviço' });
       }
-      res.status(201).send({ message: 'Serviço criado com sucesso' });
+      res.status(201).send({ id: this.lastID, nome, descricao, preco, message: 'Serviço criado com sucesso' });
     }
   );
 });
 
-// Listar todos os serviços
+// Listar todos os serviços - AGORA PROTEGIDO POR verifyJWT (qualquer usuário logado pode ver)
 router.get('/', verifyJWT, (req, res) => {
   db.all('SELECT * FROM servicos', (err, servicos) => {
     if (err) {
@@ -46,8 +47,8 @@ router.get('/', verifyJWT, (req, res) => {
   });
 });
 
-// Buscar serviço por ID
-router.get('/:id', (req, res) => {
+// Buscar serviço por ID - AGORA PROTEGIDO POR verifyJWT (qualquer usuário logado pode ver detalhes)
+router.get('/:id', verifyJWT, (req, res) => {
   const { id } = req.params;
   db.get('SELECT * FROM servicos WHERE id = ?', [id], (err, servico) => {
     if (err) {
@@ -61,11 +62,10 @@ router.get('/:id', (req, res) => {
   });
 });
 
-// Atualizar completamente um serviço
-router.put('/:id', (req, res) => {
+// Atualizar completamente um serviço - PROTEGIDO POR verifyAdmin
+router.put('/:id', verifyAdmin, (req, res) => {
   const { id } = req.params;
   const { nome, descricao, preco } = req.body;
-
   db.run(
     'UPDATE servicos SET nome = ?, descricao = ?, preco = ? WHERE id = ?',
     [nome, descricao, preco, id],
@@ -77,13 +77,13 @@ router.put('/:id', (req, res) => {
       if (this.changes === 0) {
         return res.status(404).json({ error: 'Serviço não encontrado' });
       }
-      res.status(200).json({ message: 'Serviço atualizado com sucesso' });
+      res.status(200).json({ id: parseInt(id), nome, descricao, preco, message: 'Serviço atualizado com sucesso' });
     }
   );
 });
 
-// Atualizar parcialmente um serviço
-router.patch('/:id', (req, res) => {
+// Atualizar parcialmente um serviço - PROTEGIDO POR verifyAdmin
+router.patch('/:id', verifyAdmin, (req, res) => {
   const { id } = req.params;
   const fields = req.body;
   const keys = Object.keys(fields);
@@ -92,9 +92,7 @@ router.patch('/:id', (req, res) => {
   if (keys.length === 0) {
     return res.status(400).json({ error: 'Nenhum campo fornecido para atualização' });
   }
-
   const setClause = keys.map((key) => `${key} = ?`).join(', ');
-
   db.run(`UPDATE servicos SET ${setClause} WHERE id = ?`, [...values, id], function (err) {
     if (err) {
       console.error('Erro ao atualizar o serviço parcialmente:', err);
@@ -107,8 +105,8 @@ router.patch('/:id', (req, res) => {
   });
 });
 
-// Deletar um serviço
-router.delete('/:id', verifyJWT, (req, res) => {
+// Deletar um serviço - PROTEGIDO POR verifyAdmin
+router.delete('/:id', verifyAdmin, (req, res) => {
   const { id } = req.params;
   db.run('DELETE FROM servicos WHERE id = ?', [id], function (err) {
     if (err) {

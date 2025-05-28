@@ -1,11 +1,11 @@
 var express = require('express');
 var router = express.Router();
 var sqlite3 = require('sqlite3');
-var verifyJWT = require('../auth/verify-token');
+var verifyJWT = require('../auth/verify-token'); // verifyJWT é usado aqui
 
-const db = new sqlite3.Database('./database/database.db');
+const db = require('../database/config'); // Caminho relativo de 'routes' para 'database/config.js'
 
-// Criar a tabela de solicitações, se não existir
+// Criar a tabela de solicitações, se não existir (sem alterações)
 db.run(`CREATE TABLE IF NOT EXISTS solicitations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   tutor TEXT,
@@ -21,23 +21,48 @@ db.run(`CREATE TABLE IF NOT EXISTS solicitations (
   }
 });
 
-// Criar solicitação
+// Criar solicitação - MODIFICADO para usar req.user
 router.post('/', verifyJWT, (req, res) => {
-  const { tutor, pet, servico, data_hora, status } = req.body;
+  // Os dados do usuário (tutor) virão do token decodificado (req.user)
+  const userMakingRequest = req.user; 
+
+  // Os outros campos vêm do corpo da requisição enviada pelo frontend (cart.ejs)
+  const { pet, servico, data_hora, status } = req.body;
+
+  let tutorInfoForDB;
+  if (userMakingRequest && userMakingRequest.username) {
+    tutorInfoForDB = userMakingRequest.username; // Usando o username do token
+  } else if (userMakingRequest && userMakingRequest.id) {
+    // Fallback se username não estiver no token, mas ID estiver (embora tenhamos adicionado username)
+    tutorInfoForDB = `Usuário ID: ${userMakingRequest.id}`; 
+  } else {
+    // Isso não deveria acontecer se verifyJWT funcionou corretamente
+    console.error("Erro: req.user não está definido ou não contém username/id após verifyJWT.");
+    return res.status(401).send({ error: 'Informação do usuário não encontrada no token.' });
+  }
+
   db.run(
     'INSERT INTO solicitations (tutor, pet, servico, data_hora, status) VALUES (?, ?, ?, ?, ?)',
-    [tutor, pet, servico, data_hora, status],
-    (err) => {
+    [tutorInfoForDB, pet, servico, data_hora, status], // Usando tutorInfoForDB
+    function(err) { // Usar function para ter acesso a this.lastID
       if (err) {
         console.error('Erro ao criar a solicitação:', err);
-        return res.status(500).send({ error: 'Erro ao criar a solicitação' });
+        return res.status(500).send({ error: 'Erro ao criar a solicitação no banco de dados.' });
       }
-      res.status(201).send({ message: 'Solicitação criada com sucesso' });
+      res.status(201).send({ 
+        id: this.lastID, 
+        tutor: tutorInfoForDB, // Retornando a informação do tutor usada
+        pet, 
+        servico, 
+        data_hora, 
+        status, 
+        message: 'Solicitação criada com sucesso' 
+      });
     }
   );
 });
 
-// Listar todas as solicitações
+// Listar todas as solicitações (mantido como estava, protegido por verifyJWT)
 router.get('/', verifyJWT, (req, res) => {
   db.all('SELECT * FROM solicitations', (err, solicitations) => {
     if (err) {
@@ -48,7 +73,7 @@ router.get('/', verifyJWT, (req, res) => {
   });
 });
 
-// Buscar solicitação por ID
+// Buscar solicitação por ID (mantido como estava, sem verifyJWT - considerar adicionar se necessário)
 router.get('/:id', (req, res) => {
   const { id } = req.params;
   db.get('SELECT * FROM solicitations WHERE id = ?', [id], (err, solicitation) => {
@@ -63,7 +88,7 @@ router.get('/:id', (req, res) => {
   });
 });
 
-// Atualizar completamente uma solicitação
+// Atualizar completamente uma solicitação (mantido como estava, sem verifyJWT - considerar adicionar)
 router.put('/:id', (req, res) => {
   const { id } = req.params;
   const { tutor, pet, servico, data_hora, status } = req.body;
@@ -84,7 +109,7 @@ router.put('/:id', (req, res) => {
   );
 });
 
-// Atualizar parcialmente uma solicitação
+// Atualizar parcialmente uma solicitação (mantido como estava, sem verifyJWT - considerar adicionar)
 router.patch('/:id', (req, res) => {
   const { id } = req.params;
   const fields = req.body;
@@ -109,13 +134,13 @@ router.patch('/:id', (req, res) => {
   });
 });
 
-// Deletar uma solicitação
+// Deletar uma solicitação (mantido como estava, protegido por verifyJWT)
 router.delete('/:id', verifyJWT, (req, res) => {
   const { id } = req.params;
   db.run('DELETE FROM solicitations WHERE id = ?', [id], function (err) {
     if (err) {
       console.error('Erro ao deletar a solicitação:', err);
-      return res.status(500).json({ error: 'Erro ao deletar a solicitação' });
+      return res.status(500).json({ error: 'Erro ao deletar o serviço' });
     }
     if (this.changes === 0) {
       return res.status(404).json({ error: 'Solicitação não encontrada' });

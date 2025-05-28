@@ -26,6 +26,7 @@ var productsRouter = require('./routes/products');
 var servicesRouter = require('./routes/services');
 var solicitationsRouter = require('./routes/solicitations');
 var tutorsRouter = require('./routes/tutors');
+var clientServicesRouter = require('./routes/clientServices');
 
 // DEFININDO ENDPOINT PARA AS ROTAS IMPORTADAS
 app.use('/', indexRouter);
@@ -36,6 +37,7 @@ app.use('/products', productsRouter);
 app.use('/services', servicesRouter);
 app.use('/solicitations', solicitationsRouter);
 app.use('/tutors', tutorsRouter);
+app.use('/userservices', clientServicesRouter);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

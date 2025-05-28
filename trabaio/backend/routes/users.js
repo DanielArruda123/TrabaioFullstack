@@ -1,19 +1,14 @@
 var express = require('express');
 var router = express.Router();
-var sqlite3 = require('sqlite3');
+// var sqlite3 = require('sqlite3'); // Será pego do config centralizado
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
 
-const db = new sqlite3.Database('./database/database.db')
+const db = require('../database/config'); // Caminho relativo de 'routes' para 'database/config.js'
+const verifyAdmin = require('../auth/verifyAdmin'); // Middleware para verificar se é ADM
+const verifyJWT = require('../auth/verify-token'); // Para proteger rotas que podem ser acessadas por usuários logados não-ADM (se houver no futuro)
 
-// Modificação: Adicionar a coluna 'role' com um valor padrão 'user'
-//  db.run(`DROP TABLE IF EXISTS users`, (err) => {
-//             if (err) {
-//                 console.error("Erro ao dropar a tabela users:", err.message);
-//             } else {
-//                 console.log("Tabela users dropada (se existia).");
-//             }
-//         });
+// Criação da tabela users (sem alterações na estrutura, mas user_id em pets agora referencia esta)
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE,
@@ -29,35 +24,29 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
   }
 });
 
+// ROTA DE REGISTRO - PÚBLICA (sem verifyAdmin ou verifyJWT)
 router.post('/register', (req,res) =>{
   console.log(req.body)
   const { username, password, email, phone} = req.body;
-  // Definir um papel padrão para novos usuários.
-  // Se você quiser que alguns usuários sejam ADN no cadastro,
-  // você precisaria de uma lógica aqui para determinar isso,
-  // ou um campo 'role' vindo do formulário (req.body.role).
-  // Por simplicidade, vamos definir todos como 'user' por padrão.
-  // Um usuário 'ADN' teria que ser definido manualmente no banco por enquanto,
-  // ou através de uma futura função de admin.
-  const userRole = 'user'; // Ou req.body.role se você adicionar ao seu formulário de registro
+  const userRole = 'user'; // Novos usuários são 'user' por padrão
 
   db.get('SELECT * FROM users WHERE username = ?', username, (err,row) =>{
     if(row){
-      console.log("Usuário já existe", err)
+      console.log("Usuário já existe"); // Removido 'err' daqui
       return res.status(400).send({error: 'Nome do usuário já existe'})
     }else{
-      bcrypt.hash(password,10,(err, hash) => {
-        if (err) {
-          console.log("Erro ao criar o hash da senha", err)
-          return res.status(400).send({error: 'Erro ao criar o hash da senha'})
+      bcrypt.hash(password,10,(bcryptErr, hash) => { // Renomeado err para bcryptErr
+        if (bcryptErr) {
+          console.log("Erro ao criar o hash da senha", bcryptErr)
+          return res.status(500).send({error: 'Erro ao criar o hash da senha'}) // Mudado para 500
         }else{
-            // Modificação: Incluir 'role' no INSERT
             db.run('INSERT INTO users (username, password, email, phone, role) VALUES(?,?,?,?,?)', 
-                   [username, hash, email, phone, userRole], (err)=>{ // Adicionado userRole
-              if(err){
-                console.log('Erro ao inserir usuário: ', err);
+                   [username, hash, email, phone, userRole], (insertErr)=>{ // Renomeado err para insertErr
+              if(insertErr){
+                console.log('Erro ao inserir usuário: ', insertErr);
                 return res.status(500).send({error: 'Erro ao criar o usuário'})
               }else{
+                // Não retorna o usuário completo aqui para não expor o hash da senha, mesmo que seja o de cadastro
                 res.status(201).send({message: "Usuário criado com sucesso"})
             }
           })
@@ -67,31 +56,26 @@ router.post('/register', (req,res) =>{
   })
 });
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  db.all(`SELECT id, username, email, phone, role FROM users`, (err, users) => { // Modificação: Adicionado 'role' ao SELECT
+// GET users listing - PROTEGIDO POR verifyAdmin
+router.get('/', verifyAdmin, function(req, res, next) {
+  // A query já não retorna a senha, o que é bom.
+  db.all(`SELECT id, username, email, phone, role FROM users`, (err, users) => {
     if (err) {
       console.log("Usuários não foram encontrados", err);
-      return res.status(500).send({ error: "Usuários não encontrados" });
+      return res.status(500).send({ error: "Erro ao buscar usuários" }); // Mensagem genérica
     } else {
-      // Modificação: Removido o password do retorno por segurança
-      const usersWithoutPassword = users.map(user => {
-        const { password, ...userWithoutPass } = user;
-        return userWithoutPass;
-      });
-      res.status(200).send(usersWithoutPassword);
+      res.status(200).send(users); // A remoção da senha já é feita pela query SELECT
     }
   });
 });
 
-/* GET single user by ID. */
-router.get('/:id', function(req, res, next) {
+// GET single user by ID - PROTEGIDO POR verifyAdmin
+router.get('/:id', verifyAdmin, function(req, res, next) {
   const { id } = req.params;
-  // Modificação: Adicionado 'role' ao SELECT e removido 'password'
   db.get('SELECT id, username, email, phone, role FROM users WHERE id = ?', [id], (err, row) => {
     if (err) {
-      console.error('Usuário não encontrado', err);
-      return res.status(500).json({ error: 'Usuário não encontrado' });
+      console.error('Erro ao buscar usuário por ID', err);
+      return res.status(500).json({ error: 'Erro ao buscar usuário' });
     }
     if (!row) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
@@ -101,20 +85,11 @@ router.get('/:id', function(req, res, next) {
 });
 
 
-/* PUT update a user. */
-router.put('/:id', function(req, res, next) {
+// PUT update a user - PROTEGIDO POR verifyAdmin
+router.put('/:id', verifyAdmin, function(req, res, next) {
   const { id } = req.params;
-  // Modificação: Adicionado 'role' aos campos que podem ser atualizados
   const { username, password, email, phone, role } = req.body;
   
-  // É uma boa prática não atualizar a senha diretamente assim sem verificar a senha antiga
-  // ou usar uma rota específica para mudança de senha.
-  // E se a senha for atualizada, ela deve ser hasheada novamente com bcrypt.
-  // Por simplicidade, vou manter como está, mas CUIDADO com a atualização de senha aqui.
-  // Se for atualizar a senha, precisa gerar o hash dela antes de salvar.
-
-  // Construir a query dinamicamente para atualizar apenas os campos fornecidos
-  // e hashear a senha se ela for fornecida.
   let fieldsToUpdate = [];
   let valuesToUpdate = [];
 
@@ -130,50 +105,49 @@ router.put('/:id', function(req, res, next) {
     fieldsToUpdate.push("phone = ?");
     valuesToUpdate.push(phone);
   }
-  if (role) { // Adicionado role
+  if (role) { 
     fieldsToUpdate.push("role = ?");
     valuesToUpdate.push(role);
   }
 
-  // Lógica para atualizar a senha (IMPORTANTE: hashear a nova senha)
+  // Lógica para atualizar a senha (hashear a nova senha)
   if (password) {
     bcrypt.hash(password, 10, (err, hash) => {
       if (err) {
         console.log("Erro ao criar o hash da nova senha", err);
         return res.status(500).send({ error: 'Erro ao processar nova senha' });
       }
-      const tempFieldsToUpdate = [...fieldsToUpdate]; // Clona para não afetar outras chamadas
-      const tempValuesToUpdate = [...valuesToUpdate]; // Clona
+      // Clona para não afetar outras chamadas e adiciona a senha hasheada
+      const tempFieldsToUpdateWithPassword = [...fieldsToUpdate, "password = ?"];
+      const tempValuesToUpdateWithPassword = [...valuesToUpdate, hash, id];
       
-      tempFieldsToUpdate.push("password = ?");
-      tempValuesToUpdate.push(hash);
-      tempValuesToUpdate.push(id);
-
-      if (tempFieldsToUpdate.length === 0) {
-        return res.status(400).json({ error: 'Nenhum campo válido fornecido para atualização' });
+      if (tempFieldsToUpdateWithPassword.length === 1 && tempFieldsToUpdateWithPassword[0] === "password = ?") { 
+          // Apenas a senha está sendo atualizada
+      } else if (tempFieldsToUpdateWithPassword.length === 0) { // Verificação caso password seja o único campo no if e não haja outros
+          return res.status(400).json({ error: 'Nenhum campo válido fornecido para atualização (apenas senha, sem outros campos)' });
       }
 
+
       db.run(
-        `UPDATE users SET ${tempFieldsToUpdate.join(', ')} WHERE id = ?`,
-        tempValuesToUpdate,
+        `UPDATE users SET ${tempFieldsToUpdateWithPassword.join(', ')} WHERE id = ?`,
+        tempValuesToUpdateWithPassword,
         function(err) {
           if (err) {
             console.error('Erro ao atualizar o usuário com nova senha', err);
             return res.status(500).json({ error: 'Erro ao atualizar o usuário' });
           }
           if (this.changes === 0) {
-            return res.status(404).json({ error: 'Usuário não encontrado' });
+            return res.status(404).json({ error: 'Usuário não encontrado ou dados idênticos' });
           }
           res.status(200).json({ message: 'Usuário atualizado com sucesso' });
         }
       );
     });
-  } else {
-    // Se não houver senha para atualizar, prossegue sem hashear
+  } else { // Sem atualização de senha
     if (fieldsToUpdate.length === 0) {
-      return res.status(400).json({ error: 'Nenhum campo válido fornecido para atualização' });
+      return res.status(400).json({ error: 'Nenhum campo fornecido para atualização' });
     }
-    valuesToUpdate.push(id);
+    valuesToUpdate.push(id); // Adiciona o ID ao final para a cláusula WHERE
     db.run(
       `UPDATE users SET ${fieldsToUpdate.join(', ')} WHERE id = ?`,
       valuesToUpdate,
@@ -183,7 +157,7 @@ router.put('/:id', function(req, res, next) {
           return res.status(500).json({ error: 'Erro ao atualizar o usuário' });
         }
         if (this.changes === 0) {
-          return res.status(404).json({ error: 'Usuário não encontrado' });
+          return res.status(404).json({ error: 'Usuário não encontrado ou dados idênticos' });
         }
         res.status(200).json({ message: 'Usuário atualizado com sucesso' });
       }
@@ -192,10 +166,8 @@ router.put('/:id', function(req, res, next) {
 });
 
 
-/* PATCH partially update a user. */
-// A lógica do PUT acima já funciona como um PATCH mais seguro,
-// mas se quiser manter o PATCH separado:
-router.patch('/:id', function(req, res, next) {
+// PATCH partially update a user - PROTEGIDO POR verifyAdmin
+router.patch('/:id', verifyAdmin, function(req, res, next) {
   const { id } = req.params;
   const fields = req.body;
   const keys = Object.keys(fields);
@@ -208,7 +180,6 @@ router.patch('/:id', function(req, res, next) {
   let setClauseArr = [];
   let finalValues = [];
 
-  // Se 'password' estiver entre os campos para atualizar, ele precisa ser hasheado
   const passwordIndex = keys.indexOf('password');
   if (passwordIndex > -1) {
     const plainPassword = values[passwordIndex];
@@ -220,11 +191,7 @@ router.patch('/:id', function(req, res, next) {
       
       keys.forEach((key, index) => {
         setClauseArr.push(`${key} = ?`);
-        if (index === passwordIndex) {
-          finalValues.push(hash);
-        } else {
-          finalValues.push(values[index]);
-        }
+        finalValues.push(index === passwordIndex ? hash : values[index]);
       });
       finalValues.push(id);
 
@@ -235,13 +202,12 @@ router.patch('/:id', function(req, res, next) {
           return res.status(500).json({ error: 'Erro ao atualizar o usuário parcialmente' });
         }
         if (this.changes === 0) {
-          return res.status(404).json({ error: 'Usuário não encontrado' });
+          return res.status(404).json({ error: 'Usuário não encontrado ou dados idênticos' });
         }
         res.status(200).json({ message: 'Usuário atualizado parcialmente com sucesso' });
       });
     });
   } else {
-    // Se não tem senha, continua normal
     setClauseArr = keys.map((key) => `${key} = ?`);
     finalValues = [...values, id];
     const setClause = setClauseArr.join(', ');
@@ -252,7 +218,7 @@ router.patch('/:id', function(req, res, next) {
         return res.status(500).json({ error: 'Erro ao atualizar o usuário parcialmente' });
       }
       if (this.changes === 0) {
-        return res.status(404).json({ error: 'Usuário não encontrado' });
+        return res.status(404).json({ error: 'Usuário não encontrado ou dados idênticos' });
       }
       res.status(200).json({ message: 'Usuário atualizado parcialmente com sucesso' });
     });
@@ -260,8 +226,8 @@ router.patch('/:id', function(req, res, next) {
 });
 
 
-/* DELETE a user. */
-router.delete('/:id', function(req, res, next) {
+// DELETE a user - PROTEGIDO POR verifyAdmin
+router.delete('/:id', verifyAdmin, function(req, res, next) {
   const { id } = req.params;
   db.run('DELETE FROM users WHERE id = ?', [id], function(err) {
     if (err) {

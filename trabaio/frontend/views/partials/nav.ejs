@@ -1,8 +1,7 @@
-<%# trabalio/frontend/views/partials/nav.ejs %>
-
 <nav class="orange darken-2" role="navigation">
   <div class="nav-wrapper container">
     <a id="logo-container" href="/" class="brand-logo"><img src="/img/logo-pets.png" alt="logo"></a>
+    
     <ul class="right hide-on-med-and-down">
       <li><a href="/"><i class="material-icons left">home</i>Home</a></li>
 
@@ -10,14 +9,16 @@
       <% if (locals.currentUserRole) { %>
         <li><a href="/pets"><i class="material-icons left">pets</i>Pets</a></li>
         <li><a href="/products"><i class="material-icons left">store</i>Products</a></li>
-        <li><a href="/services"><i class="material-icons left">room_service</i>Services</a></li>
         <li><a href="/tutors"><i class="material-icons left">assignment_ind</i>Tutors</a></li>
         <li><a href="/solicitations"><i class="material-icons left">playlist_add_check</i>Solicitations</a></li>
-      <% } %>
+        <li><a href="/userservices"><i class="material-icons left">shopping_basket</i>Serviços Cliente</a></li> 
 
-      <%# Link de "Gerenciar Usuários" - Somente para ADM %>
+      <% } %>
+        
+      <%# Link de "Gerenciar Usuários" e "Services (ADM)" - Somente para ADM %>
       <% if (locals.currentUserRole && currentUserRole === 'ADM') { %>
         <li><a href="/users"><i class="material-icons left">people</i>Usuários</a></li>
+        <li><a href="/services"><i class="material-icons left">room_service</i>Services</a></li> 
       <% } %>
       
       <%# Links de Login/Logout %>
@@ -35,7 +36,7 @@
             <img src="https://materializecss.com/images/office.jpg">
           </div>
           <a href="#user"><img class="circle" src="https://materializecss.com/images/yuna.jpg"></a>
-          <a href="#name"><span class="white-text name">John Doe</span></a>
+          <a href="#name"><span class="white-text name">John Doe</span></a> 
           <a href="#email"><span class="white-text email">jdandturk@gmail.com</span></a>
         </div>
       </li>
@@ -44,13 +45,19 @@
       <% if (locals.currentUserRole) { %>
         <li><a href="/pets"><i class="material-icons left">pets</i>Pets</a></li>
         <li><a href="/products"><i class="material-icons left">store</i>Products</a></li>
-        <li><a href="/services"><i class="material-icons left">room_service</i>Services</a></li>
+        
+        <%# === ADICIONAR ESTA LINHA PARA O NOVO LINK (SIDENAV) === %>
+        <li><a href="/userservices"><i class="material-icons left">shopping_basket</i>Serviços Cliente</a></li>
+        <%# ====================================================== %>
+        
         <li><a href="/tutors"><i class="material-icons left">assignment_ind</i>Tutors</a></li>
         <li><a href="/solicitations"><i class="material-icons left">playlist_add_check</i>Solicitations</a></li>
+        <%# O link para /services (ADM) já está na seção de ADM abaixo %>
       <% } %>
 
       <% if (locals.currentUserRole && currentUserRole === 'ADM') { %>
         <li><a href="/users"><i class="material-icons left">people</i>Usuários</a></li>
+        <li><a href="/services"><i class="material-icons left">room_service</i>Services</a></li> 
       <% } %>
 
       <% if (locals.currentUserRole) { %>

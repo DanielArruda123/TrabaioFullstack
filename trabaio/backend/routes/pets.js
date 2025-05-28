@@ -3,7 +3,7 @@ var router = express.Router();
 var sqlite3 = require('sqlite3');
 var verifyJWT = require('../auth/verify-token')
 
-const db = new sqlite3.Database('./database/database.db');
+const db = require('../database/config'); // Caminho relativo de 'routes' para 'database/config.js'
 
     // Criar a nova tabela
     db.run(`CREATE TABLE IF NOT EXISTS pets (

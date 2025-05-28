@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const sqlite3 = require('sqlite3');
-const db = new sqlite3.Database('./database/database.db');
+const db = require('../database/config'); // Caminho relativo de 'routes' para 'database/config.js'
 
 // Criação da tabela de tutores
 db.run(`
