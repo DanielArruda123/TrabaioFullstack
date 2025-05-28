@@ -24,21 +24,23 @@
 <span id="error"></span>
 
 <% if (error) { %>
-  <span><%=JSON.stringify(error) %></span>
+  <span><%= JSON.stringify(error)%></span>
 <% } %>
 
 <table>
   <thead>
     <tr>
-      <% for (let col of cols) { %>
-        <th><%= col %></th>
-      <% } %>
+      <th>ID</th> <!-- nova coluna -->
+    <% for (let col of cols) { %>
+      <th><%= col %></th>
+    <% } %>
     </tr>
   </thead>
   <tbody>
     <% if (pets && pets.length > 0) { %>
       <% pets.forEach(pet => { %>
         <tr>
+          <td><%= pet.id %></td>
           <td><%= pet.name %></td>
           <td><%= pet.race %></td>
           <td><%= pet.colour %></td>
@@ -112,7 +114,7 @@
       window.location.reload();
     })
     .catch((error) => {
-      document.getElementById('error').innerText = error.message || error;
+      document.getElementById('error').innerText = JSON.stringify(error);
     });
   }
 

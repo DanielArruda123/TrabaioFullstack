@@ -8,21 +8,18 @@ var logger = require('morgan');
 var rateLimit = require('express-rate-limit');
 var session = require('express-session')
 
+require('../node_modules/dotenv').config({path:'../.env'});
+
 const cors = require('cors');
 var app = express();
 app.use(express.json());
-
-// Configuração do CORS
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
-}));
+app.use(cors());
 
 //Configuração de limite de requisições
 const limiter = rateLimit({
-  windowMS: 1 * 60 * 1000,
-  max: 3,
-  keyGenerator: (req, res) =>req.headers['x-forwarded-for'] || req.ip
+  windowMS: 15 * 60 * 1000,
+  max: 100,
+  keyGenerator: (req, res)=> req.headers['x-forwarded-for'] || req.connection.remoteAddress
 });
 
 //Configuração de sessão
@@ -49,7 +46,7 @@ app.use('/tutors', tutorsRouter);
 app.use('/services', servicesRouter);
 app.use('/products', productsRouter);
 app.use('/solicitations', solicitationsRouter);
-app.use('/auth', limiter, authRouter)
+app.use('/auth',limiter, authRouter)
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -59,6 +56,8 @@ app.use(logger('dev'));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

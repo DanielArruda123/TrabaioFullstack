@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "express-session": "^1.18.1"
+    "dotenv": "^16.5.0"
   }
 }

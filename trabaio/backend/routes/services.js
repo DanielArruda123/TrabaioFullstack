@@ -1,11 +1,11 @@
 var express = require('express');
 var router = express.Router();
 var sqlite3 = require('sqlite3');
+var verifyJWT = require('../auth/verify-token');
 
 const db = new sqlite3.Database('./database/database.db');
 
-// Criação da tabela serviços
-
+// Criar a tabela de serviços, se não existir
 db.run(`CREATE TABLE IF NOT EXISTS servicos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   nome TEXT,
@@ -19,10 +19,11 @@ db.run(`CREATE TABLE IF NOT EXISTS servicos (
   }
 });
 
-// Criar novo serviço
-router.post('/servicos', (req, res) => {
+// Criar serviço
+router.post('/', verifyJWT, (req, res) => {
   const { nome, descricao, preco } = req.body;
-  db.run('INSERT INTO servicos (nome, descricao, preco) VALUES (?, ?, ?)',
+  db.run(
+    'INSERT INTO servicos (nome, descricao, preco) VALUES (?, ?, ?)',
     [nome, descricao, preco],
     (err) => {
       if (err) {
@@ -30,11 +31,12 @@ router.post('/servicos', (req, res) => {
         return res.status(500).send({ error: 'Erro ao criar o serviço' });
       }
       res.status(201).send({ message: 'Serviço criado com sucesso' });
-    });
+    }
+  );
 });
 
 // Listar todos os serviços
-router.get('/servicos', (req, res) => {
+router.get('/', verifyJWT, (req, res) => {
   db.all('SELECT * FROM servicos', (err, servicos) => {
     if (err) {
       console.error('Erro ao buscar os serviços:', err);
@@ -45,7 +47,7 @@ router.get('/servicos', (req, res) => {
 });
 
 // Buscar serviço por ID
-router.get('/servicos/:id', (req, res) => {
+router.get('/:id', (req, res) => {
   const { id } = req.params;
   db.get('SELECT * FROM servicos WHERE id = ?', [id], (err, servico) => {
     if (err) {
@@ -60,11 +62,12 @@ router.get('/servicos/:id', (req, res) => {
 });
 
 // Atualizar completamente um serviço
-router.put('/servicos/:id', (req, res) => {
+router.put('/:id', (req, res) => {
   const { id } = req.params;
   const { nome, descricao, preco } = req.body;
 
-  db.run('UPDATE servicos SET nome = ?, descricao = ?, preco = ? WHERE id = ?',
+  db.run(
+    'UPDATE servicos SET nome = ?, descricao = ?, preco = ? WHERE id = ?',
     [nome, descricao, preco, id],
     function (err) {
       if (err) {
@@ -75,11 +78,12 @@ router.put('/servicos/:id', (req, res) => {
         return res.status(404).json({ error: 'Serviço não encontrado' });
       }
       res.status(200).json({ message: 'Serviço atualizado com sucesso' });
-    });
+    }
+  );
 });
 
-// Atualização parcial de um serviço
-router.patch('/servicos/:id', (req, res) => {
+// Atualizar parcialmente um serviço
+router.patch('/:id', (req, res) => {
   const { id } = req.params;
   const fields = req.body;
   const keys = Object.keys(fields);
@@ -104,7 +108,7 @@ router.patch('/servicos/:id', (req, res) => {
 });
 
 // Deletar um serviço
-router.delete('/servicos/:id', (req, res) => {
+router.delete('/:id', verifyJWT, (req, res) => {
   const { id } = req.params;
   db.run('DELETE FROM servicos WHERE id = ?', [id], function (err) {
     if (err) {

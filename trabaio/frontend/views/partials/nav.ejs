@@ -1,12 +1,31 @@
-<nav class="light-blue lighten-1" role="navigation">
+<%# trabalio/frontend/views/partials/nav.ejs %>
+
+<nav class="orange darken-2" role="navigation">
   <div class="nav-wrapper container">
-    <a id="logo-container" href="#" class="brand-logo">Logo</a>
+    <a id="logo-container" href="/" class="brand-logo"><img src="/img/logo-pets.png" alt="logo"></a>
     <ul class="right hide-on-med-and-down">
       <li><a href="/"><i class="material-icons left">home</i>Home</a></li>
-      <li><a href="/users"><i class="material-icons left">people</i>Usuários</a></li>
-      <li><a href="/pets"><i class="material-icons left">pets</i>Pets</a></li>
-      <li><a href="/login"><i class="material-icons left">login</i>login</a></li>
 
+      <%# Links que podem ser vistos por qualquer usuário logado %>
+      <% if (locals.currentUserRole) { %>
+        <li><a href="/pets"><i class="material-icons left">pets</i>Pets</a></li>
+        <li><a href="/products"><i class="material-icons left">store</i>Products</a></li>
+        <li><a href="/services"><i class="material-icons left">room_service</i>Services</a></li>
+        <li><a href="/tutors"><i class="material-icons left">assignment_ind</i>Tutors</a></li>
+        <li><a href="/solicitations"><i class="material-icons left">playlist_add_check</i>Solicitations</a></li>
+      <% } %>
+
+      <%# Link de "Gerenciar Usuários" - Somente para ADM %>
+      <% if (locals.currentUserRole && currentUserRole === 'ADM') { %>
+        <li><a href="/users"><i class="material-icons left">people</i>Usuários</a></li>
+      <% } %>
+      
+      <%# Links de Login/Logout %>
+      <% if (locals.currentUserRole) { %>
+        <li><a href="/login/logout"><i class="material-icons left">exit_to_app</i>Sair</a></li>
+      <% } else { %>
+        <li><a href="/login"><i class="material-icons left">login</i>Login</a></li>
+      <% } %>
     </ul>
 
     <ul id="nav-mobile" class="sidenav">
@@ -21,9 +40,24 @@
         </div>
       </li>
       <li><a href="/"><i class="material-icons left">home</i>Home</a></li>
-      <li><a href="/users"><i class="material-icons left">people</i>Usuários</a></li>
-      <li><a href="/pets"><i class="material-icons left">pets</i>Pets</a></li>
-      <li><a href="/login"><i class="material-icons left">login</i>login</a></li>
+      
+      <% if (locals.currentUserRole) { %>
+        <li><a href="/pets"><i class="material-icons left">pets</i>Pets</a></li>
+        <li><a href="/products"><i class="material-icons left">store</i>Products</a></li>
+        <li><a href="/services"><i class="material-icons left">room_service</i>Services</a></li>
+        <li><a href="/tutors"><i class="material-icons left">assignment_ind</i>Tutors</a></li>
+        <li><a href="/solicitations"><i class="material-icons left">playlist_add_check</i>Solicitations</a></li>
+      <% } %>
+
+      <% if (locals.currentUserRole && currentUserRole === 'ADM') { %>
+        <li><a href="/users"><i class="material-icons left">people</i>Usuários</a></li>
+      <% } %>
+
+      <% if (locals.currentUserRole) { %>
+        <li><a href="/login/logout"><i class="material-icons left">exit_to_app</i>Sair</a></li>
+      <% } else { %>
+        <li><a href="/login"><i class="material-icons left">login</i>Login</a></li>
+      <% } %>
     </ul>
 
     <a href="#" data-target="nav-mobile" class="sidenav-trigger">

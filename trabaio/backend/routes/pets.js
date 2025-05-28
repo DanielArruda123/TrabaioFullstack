@@ -21,7 +21,7 @@ const db = new sqlite3.Database('./database/database.db');
     });
 
 // Criar pet
-router.post('/', (req, res) => {
+router.post('/', verifyJWT, (req, res) => {
   const { name, race, colour, gender } = req.body;
   db.run(
     'INSERT INTO pets (name, race, colour, gender) VALUES (?, ?, ?, ?)',
@@ -110,7 +110,7 @@ router.patch('/:id', (req, res) => {
 });
 
 // Deletar pet
-router.delete('/:id', (req, res) => {
+router.delete('/:id', verifyJWT, function(req, res){
   const { id } = req.params;
   db.run('DELETE FROM pets WHERE id = ?', [id], function (err) {
     if (err) {
