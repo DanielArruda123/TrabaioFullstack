@@ -4,12 +4,11 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-require('../node_modules/dotenv').config({path:'../.env'});
-
 //Libs Auth
 var rateLimit = require('express-rate-limit');
 var session = require('express-session')
 
+require('../node_modules/dotenv').config({path:'../.env'});
 
 const cors = require('cors');
 var app = express();

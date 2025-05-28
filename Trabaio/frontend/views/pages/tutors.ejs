@@ -1,30 +1,23 @@
+<!-- filepath: views/pages/tutors.ejs -->
 <h1>Gestão de Tutores</h1>
 
 <form id="tutorForm">
   <input type="hidden" name="id" id="id">
-
   <label>Nome</label>
   <input required name="nome" id="nome" type="text"><br>
-
   <label>Contato</label>
   <input required name="contato" id="contato" type="text"><br>
-
   <label>Endereço</label>
   <input required name="endereco" id="endereco" type="text"><br>
-
   <label>Pets Associados (IDs separados por vírgula)</label>
   <input name="pets_associados" id="pets_associados" type="text"><br>
-
   <button type="submit">Enviar</button>
   <button type="reset">Cancelar</button>
 </form>
 
 <span id="error"></span>
 
-<!-- Botão para mostrar/esconder tabela -->
-<button id="toggleTableBtn">Mostrar Tabela</button>
-
-<table id="tutorTable" style="display: none; margin-top: 10px;">
+<table>
   <thead>
     <tr>
       <th>ID</th>
@@ -58,21 +51,8 @@
   </tbody>
 </table>
 
-<!-- jQuery CDN -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <script>
-  // Botão mostrar/esconder a tabela
-  $(document).ready(function () {
-    $('#toggleTableBtn').click(function () {
-      $('#tutorTable').slideToggle(300);
-      const atual = $(this).text();
-      $(this).text(atual === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
-    });
-  });
-
   const form = document.getElementById('tutorForm');
-
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const tutor = mountDataForm();
