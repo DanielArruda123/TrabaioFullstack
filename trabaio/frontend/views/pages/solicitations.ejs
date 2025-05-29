@@ -151,3 +151,42 @@
     return solicitation;
   }
 </script>
+<script src="https://unpkg.com/imask"></script>
+<script>
+  const dhInput = document.getElementById('data_hora');
+  const dateTimeMaskOptions = {
+      mask: Date,
+      pattern: 'd{`/-`}m H:MM', // Formato: dia/mêshora:minuto
+      lazy: true,
+      autofix: true,
+      // Opcional: min e max para limitar o intervalo
+      min: new Date(1900, 0, 1, 0, 0, 0),
+      max: new Date(2050, 11, 31, 23, 59, 59),
+
+      // Elementos de data e hora e seus ranges
+      blocks: {
+          d: {
+              mask: IMask.MaskedRange,
+              from: 1,
+              to: 31
+          },
+          m: {
+              mask: IMask.MaskedRange,
+              from: 1,
+              to: 12
+          },
+          H: {
+              mask: IMask.MaskedRange,
+              from: 0,
+              to: 23
+          },
+          M: {
+              mask: IMask.MaskedRange,
+              from: 0,
+              to: 59
+          }
+      }
+  };
+const dhMask = IMask(dhInput, dateTimeMaskOptions);
+
+</script>

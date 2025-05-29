@@ -139,3 +139,15 @@
     return tutor;
   }
 </script>
+<script src="https://unpkg.com/imask"></script>
+<script>
+  const contatoInput = document.getElementById('contato');
+  const maskOptions = {
+    mask: '(00)00000-0000',
+    lazy: false,
+    placeholderChar: '_',
+    showMask: true,
+  };
+const phoneMask = IMask(contatoInput, maskOptions);
+
+</script>

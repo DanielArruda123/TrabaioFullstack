@@ -15,6 +15,7 @@
     "express": "~4.16.1",
     "express-session": "^1.18.1",
     "http-errors": "~1.6.3",
+    "imask": "^7.6.1",
     "jwt-decode": "^4.0.0",
     "morgan": "~1.9.1",
     "nodemon": "^3.1.10"
