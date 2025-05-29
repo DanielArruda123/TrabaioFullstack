@@ -1,0 +1,447 @@
+/* Custom Stylesheet */
+/**
+ * Use this file to override Materialize files so you can update
+ * the core Materialize files in the future
+ *
+ * Made By MaterializeCSS.com
+ */
+
+html, body {
+  height: 100%;
+}
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #FFF9F3 !important;
+}
+main {
+  flex: 1 0 auto;
+  background: #FFF9F3 !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+header {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+nav .brand-logo img {
+    height: 48px;
+    width: auto;
+    max-height: 56px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+/* --- HOME PAGE CUSTOM STYLES (sem conflito com Materialize) --- */
+.home-main {
+  background: linear-gradient(135deg, #fff 60%, #ffe0b2 100%);
+  min-height: 100vh;
+  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+  color: #333;
+}
+.home-main section {
+  margin: 0 auto 2.5rem auto;
+  padding: 0 0 0.5rem 0;
+  max-width: 1200px;
+}
+.home-main h2 {
+  color: #F57C00;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  margin-top: 0;
+  letter-spacing: 0.5px;
+  text-align: left;
+}
+.home-main .servicos h2,
+.home-main .hotelzinho h2,
+.home-main .veterinario h2,
+.home-main .avaliacoes h2 {
+  color: #F57C00;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+  text-align: left;
+}
+.home-main .servicos .cards,
+.home-main .veterinario .cards,
+.home-main .avaliacoes .cards {
+  gap: 1.5rem;
+  justify-content: center;
+}
+.home-main .hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 2.5rem 2rem 1.5rem 2rem;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  margin-bottom: 0.5rem;
+}
+.home-title {
+  color: #F57C00;
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 0.7rem;
+  margin-top: 0;
+  letter-spacing: 0.5px;
+  text-align: left;
+}
+.home-subtitle {
+  color: #444;
+  font-size: 1.1rem;
+  margin-bottom: 1.2rem;
+  text-align: left;
+  max-width: 500px;
+}
+.home-main .hero .btn-main {
+  margin-bottom: 1.5rem;
+  margin-left: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.7rem 2.2rem;
+  font-size: 1.1rem;
+  border-radius: 10px;
+}
+.home-main .hero .img-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+.home-main .hero .img-wrapper img {
+  max-width: 750px;
+  width: 100%;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(245, 124, 0, 0.10);
+}
+.btn-main, .btn-main:visited {
+  display: inline-block;
+  background: linear-gradient(90deg, #f57c00 80%, #ff9800 100%);
+  color: #fff;
+  padding: 1.1rem 2.5rem;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 12px rgba(245, 124, 0, 0.10);
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 1px;
+  text-align: center;
+}
+.btn-main:hover, .btn-main:focus {
+  background: #fff3e0;
+  color: #f57c00;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 24px rgba(245, 124, 0, 0.18);
+}
+.btn-main,
+.btn.btn-main,
+.btn-large.btn-main,
+.btn-small.btn-main {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.5em;
+  background: #F57C00 !important;
+  color: #fff !important;
+  border: none !important;
+}
+.btn-main .material-icons,
+.btn.btn-main .material-icons {
+  margin-left: 0.3em;
+  margin-right: 0;
+  vertical-align: middle;
+  color: inherit !important;
+}
+.btn-main:hover, .btn-main:focus, .btn.btn-main:hover, .btn.btn-main:focus {
+  background: #fff3e0 !important;
+  color: #f57c00 !important;
+}
+.home-main .img-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.home-main .img-wrapper img {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(245, 124, 0, 0.10);
+}
+.home-main .cards {
+  display: flex;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+  margin: 0 auto;
+}
+.home-main .card {
+  background: #fff;
+  padding: 1.2rem 1rem 1.2rem 1rem;
+  border-radius: 16px;
+  flex: 1 1 260px;
+  min-width: 260px;
+  max-width: 320px;
+  box-shadow: 0 4px 16px rgba(245, 124, 0, 0.10);
+  text-align: left;
+  margin-bottom: 0.5rem;
+}
+.home-main .card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 8px 32px rgba(245, 124, 0, 0.13);
+}
+.home-main .card img {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 2px 8px rgba(245, 124, 0, 0.06);
+}
+.home-main .card p {
+  color: #444;
+  font-size: 1rem;
+  margin-bottom: 0.7rem;
+}
+.home-main .card h3 {
+  color: #F57C00;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.home-main .hotelzinho {
+  display: flex;
+  gap: 2.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.home-main .hotelzinho .info {
+  flex: 1;
+  text-align: left;
+  min-width: 260px;
+}
+.home-main .hotelzinho .info h4 {
+  color: #F57C00;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 1.1rem 0 0.2rem 0;
+}
+.home-main .hotelzinho .info p {
+  color: #444;
+  margin-bottom: 0.7rem;
+}
+.home-main .hotelzinho .btn-main {
+  margin-top: 1.2rem;
+  margin-left: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.7rem 2.2rem;
+  font-size: 1.1rem;
+  border-radius: 10px;
+}
+.home-main .avaliacoes .cards {
+  gap: 1.2rem;
+}
+.home-main .avaliacoes .card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(245, 124, 0, 0.10);
+  padding: 1.2rem 1rem 1.2rem 1rem;
+  min-width: 220px;
+  max-width: 320px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+.home-main .avaliacoes .card p {
+  font-style: italic;
+  margin-bottom: 1.2rem;
+  color: #666;
+}
+.home-main .autor {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: flex-start;
+}
+.home-main .autor img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(245, 124, 0, 0.10);
+}
+.home-main .avaliacoes .card strong {
+  color: #222;
+  font-size: 1rem;
+}
+.home-main .avaliacoes .card span {
+  color: #F57C00;
+  font-size: 0.95rem;
+  margin-left: 3.2rem;
+  margin-top: -0.7rem;
+  margin-bottom: 0.2rem;
+  display: block;
+}
+.footer {
+  background: none !important;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  margin-top: 4.5rem;
+  width: 100%;
+  flex-shrink: 0;
+  border-top: none !important;
+}
+.footer .footer-top {
+  background: #F57C00;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 2.5rem 2rem 2rem 2rem;
+  border-radius: 0 0 0 0;
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+.footer .footer-top h2 {
+  color: #fff;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+.footer .footer-top .pata {
+  width: 140px;
+  height: auto;
+  opacity: 0.25;
+  position: absolute;
+  right: 2.5rem;
+  top: 1.5rem;
+  z-index: 1;
+  pointer-events: none;
+}
+.footer .footer-bottom {
+  background: #fff;
+  color: #222;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 2rem 2rem 1.5rem 2rem;
+  /* border-top: 3px solid #2196f3; */ /* Linha azul removida */
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 2px 12px rgba(33,150,243,0.08);
+  font-size: 1.05rem;
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+.footer .footer-bottom .links {
+  flex: 1;
+  min-width: 220px;
+}
+.footer .footer-bottom .links p {
+  margin-bottom: 1rem;
+  font-weight: 500;
+  color: #222;
+}
+.footer .footer-bottom ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.footer .footer-bottom ul li {
+  margin-bottom: 0.5rem;
+  color: #222;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.footer .footer-bottom ul li a {
+  color: #222;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer .footer-bottom ul li a:hover {
+  color: #2196f3;
+}
+.footer .footer-bottom .membros {
+  min-width: 180px;
+  text-align: right;
+}
+.footer .footer-bottom .membros p {
+  font-weight: 600;
+  margin-bottom: 0.7rem;
+  color: #222;
+}
+.footer .footer-bottom .membros ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.footer .footer-bottom .membros ul li {
+  margin-bottom: 0.4rem;
+  color: #222;
+  font-size: 1rem;
+}
+@media (max-width: 900px) {
+  .home-main section {
+    padding: 0 0.5rem 0.5rem 0.5rem;
+  }
+  .home-main .hero {
+    padding: 1.2rem 0.5rem 0.5rem 0.5rem;
+  }
+  .home-title {
+    font-size: 1.5rem;
+  }
+  .home-main .hero .img-wrapper img {
+    max-width: 95vw;
+  }
+  .home-main .cards {
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+  .home-main .hotelzinho {
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+  .footer .top-footer {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .footer .footer-top, .footer .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    padding: 2rem 1rem 1.5rem 1rem;
+  }
+  .footer .footer-top .pata {
+    position: static;
+    margin: 1.5rem auto 0 auto;
+    display: block;
+    width: 100px;
+    opacity: 0.18;
+  }
+  .footer .footer-bottom .membros {
+    text-align: left;
+    margin-top: 1.5rem;
+  }
+}
+/* --- FIM HOME PAGE CUSTOM --- */

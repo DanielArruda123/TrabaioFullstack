@@ -1,0 +1,107 @@
+<div class="container">
+  <h3 class="header center teal-text text-darken-2"><%= title %></h3>
+
+  <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+    <div class="row">
+      <div class="col s12">
+        <div class="card-panel red lighten-2 white-text">
+          <strong>Erro:</strong> <%= error %>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (typeof services !== 'undefined' && services.length > 0) { %>
+    <div class="row">
+      <% services.forEach(function(service) { %>
+        <div class="col s12 m6 l4">
+          <div class="card">
+            <div class="card-content">
+              <span class="card-title activator grey-text text-darken-4"><%= service.nome %><i class="material-icons right">more_vert</i></span>
+              <p><strong>Preço:</strong> R$ <%= parseFloat(service.preco).toFixed(2) %></p>
+            </div>
+            <div class="card-reveal">
+              <span class="card-title grey-text text-darken-4"><%= service.nome %><i class="material-icons right">close</i></span>
+              <p><%= service.descricao %></p>
+            </div>
+            <%# === BOTÃO DE AÇÃO ADICIONADO DE VOLTA === %>
+            <div class="card-action">
+              <button 
+                class="btn waves-effect waves-light teal add-to-cart-btn" 
+                data-service-id="<%= service.id %>"
+                data-service-nome="<%= service.nome %>"
+                data-service-preco="<%= service.preco %>"
+              >
+                Selecionar <i class="material-icons right">add_shopping_cart</i>
+              </button>
+            </div>
+            <%# ========================================= %>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } else if (!error || error.length === 0) { %>
+    <p class="center-align">Nenhum serviço disponível no momento.</p>
+  <% } %>
+</div>
+
+<%# === BOTÃO FLUTUANTE (FAB) PARA O CARRINHO ADICIONADO DE VOLTA === %>
+<div class="fixed-action-btn">
+  <a class="btn-floating btn-large orange darken-2 tooltipped" href="/userservices/cart" data-position="left" data-tooltip="Ver Carrinho">
+    <i class="large material-icons">shopping_cart</i>
+    <span class="cart-badge" style="position: absolute; top: -5px; right: -5px; background: white; color: teal; border-radius: 50%; padding: 2px 6px; font-size: 0.8rem; font-weight: bold; display: none;"></span>
+  </a>
+</div>
+<%# =============================================================== %>
+
+<%# === SCRIPT PARA O CARRINHO ADICIONADO DE VOLTA === %>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Inicializa tooltips para o FAB
+    var fabTooltipElems = document.querySelectorAll('.tooltipped');
+    M.Tooltip.init(fabTooltipElems);
+
+    const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+    const cartBadge = document.querySelector('.cart-badge');
+
+    function updateCartBadge() {
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      if (cartBadge) { // Verifica se o elemento cartBadge existe
+        if (cart.length > 0) {
+          cartBadge.textContent = cart.length;
+          cartBadge.style.display = 'block';
+        } else {
+          cartBadge.style.display = 'none';
+        }
+      }
+    }
+
+    updateCartBadge(); // Chama para definir o estado inicial do badge
+
+    addToCartButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const serviceId = this.dataset.serviceId;
+        const serviceNome = this.dataset.serviceNome;
+        const servicePreco = parseFloat(this.dataset.servicePreco);
+        
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        
+        const existingServiceIndex = cart.findIndex(item => item.id === serviceId);
+        
+        if (existingServiceIndex > -1) {
+          // Se já existe, incrementa a quantidade
+          // cart[existingServiceIndex].quantidade++; // Descomente se quiser incrementar
+          M.toast({html: `${serviceNome} já está no carrinho! (Quantidade não incrementada nesta versão)`});
+        } else {
+          // Adiciona novo item com quantidade 1
+          cart.push({ id: serviceId, nome: serviceNome, preco: servicePreco, quantidade: 1 });
+          M.toast({html: `${serviceNome} adicionado ao carrinho!`});
+        }
+        
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartBadge(); 
+      });
+    });
+  });
+</script>
+<%# ================================================ %>
