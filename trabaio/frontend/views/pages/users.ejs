@@ -1,6 +1,4 @@
-<h1>
-  <%= title %>
-</h1>
+<h1><%= title %></h1>
 
 <form id="userForm" action="">
   <input required type="hidden" name="id" id="id">
@@ -31,31 +29,27 @@
   <span><%= error %></span>
 <% } %>
 
-<table>
+<!-- Botão de controle da tabela -->
+<button id="toggleTableBtn">Mostrar Tabela</button>
+
+<table id="userTable" style="display: none; margin-top: 10px;">
   <thead>
     <tr>
-      <% for(let col of cols) { %>
-        <th><%= col %></th>
-      <% } %>
+      <th>ID</th>
+    <% for (let col of cols) { %>
+      <th><%= col %></th>
+    <% } %>
     </tr>
   </thead>
   <tbody>
     <% if (users && users.length > 0) { %>
       <% users.forEach(user => { %>
         <tr>
+          <td><%= user.id %></td>
           <td><%= user.username %></td>
+          <td><%= user.password %></td>
           <td><%= user.email %></td>
           <td><%= user.phone %></td>
-          <td>
-            <%# Lógica para exibir o nome do cargo de forma amigável %>
-            <% if (user.role === 'ADM') { %>
-              Administrador
-            <% } else if (user.role === 'user') { %>
-              Usuário
-            <% } else { %>
-              <%= user.role %> <%# Mostra o valor bruto se não for ADM nem user %>
-            <% } %>
-          </td>
           <td>
             <button onclick="editUser('<%= user.id %>')">Editar</button>
             <button onclick="deleteUser('<%= user.id %>')">Excluir</button>
@@ -70,7 +64,19 @@
   </tbody>
 </table>
 
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
+  // Botão de mostrar/esconder tabela
+  $(document).ready(function () {
+    $('#toggleTableBtn').click(function () {
+      $('#userTable').slideToggle(300);
+      const atual = $(this).text();
+      $(this).text(atual === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+    });
+  });
+
   const form = document.getElementById('userForm')
 
   form.addEventListener("submit", (e) => {
