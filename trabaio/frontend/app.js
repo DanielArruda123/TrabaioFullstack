@@ -5,7 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
 var bodyParser = require('body-parser');
-
+require('../node_modules/dotenv').config({path:'../.env'});
 var app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -29,6 +29,7 @@ var servicesRouter = require('./routes/services');
 var solicitationsRouter = require('./routes/solicitations');
 var tutorsRouter = require('./routes/tutors');
 var clientServicesRouter = require('./routes/clientServices');
+var clientProductsRouter = require('./routes/clientProducts');
 
 // DEFININDO ENDPOINT PARA AS ROTAS IMPORTADAS
 app.use('/', indexRouter);
@@ -40,6 +41,7 @@ app.use('/services', servicesRouter);
 app.use('/solicitations', solicitationsRouter);
 app.use('/tutors', tutorsRouter);
 app.use('/userservices', clientServicesRouter);
+app.use('/userproducts', clientProductsRouter);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

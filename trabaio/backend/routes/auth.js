@@ -26,7 +26,7 @@ router.post('/login', (req, res) => {
                 } else {
                     const token = jwt.sign(
                         { id: row.id, username: row.username, role: row.role },
-                        'f7c74e23b069884c186e9c8f478b32522759e88e1d112ccf1e23ec25c2d4607b', 
+                        process.env.TOKEN, 
                         { expiresIn: '1h' } 
                     );
                     return res.status(200).send({message: 'Login com sucesso', token});

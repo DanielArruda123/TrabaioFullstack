@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { jwtDecode } = require('jwt-decode'); // <<-- ADICIONADO
-const url = "http://localhost:4000/tutors";
+const url = process.env.BACK_URL + "/tutors";
 
 // Listar todos os tutores
 router.get('/', function (req, res) {

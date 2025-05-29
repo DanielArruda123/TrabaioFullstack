@@ -3,7 +3,7 @@ var router = express.Router();
 // const { jwtDecode } = require('jwt-decode'); // Não é usado diretamente neste arquivo para o fluxo atual
 
 // URL do backend para o endpoint de login
-const backendLoginUrl = "http://localhost:4000/auth/login"; 
+const backendLoginUrl = process.env.BACK_URL + "/auth/login"; 
 
 // Rota GET para exibir a página de login/cadastro
 router.get('/', function(req, res, next) {

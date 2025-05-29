@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 const { jwtDecode } = require('jwt-decode');
-const backendServicesUrl = "http://localhost:4000/services";
+const backendServicesUrl = process.env.BACK_URL + "/services";
 
 /* GET página para cliente selecionar serviços. */
 router.get('/', function (req, res, next) {

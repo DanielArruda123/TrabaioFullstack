@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 const { jwtDecode } = require('jwt-decode'); 
-const url = "http://localhost:4000/users"; // URL base para o backend de usuários
+const url = process.env.BACK_URL + "/users"; // URL base para o backend de usuários
 
 // Rota GET /users (para listar usuários - como modificamos antes)
 // Mantenha o código da sua rota GET / aqui como já ajustamos
