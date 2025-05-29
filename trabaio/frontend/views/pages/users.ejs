@@ -1,0 +1,157 @@
+<h1><%= title %></h1>
+
+<form id="userForm" action="">
+  <input required type="hidden" name="id" id="id">
+
+  <label for="username">Nome</label>
+  <input required name="username" id="username" type="text"><br>
+
+  <label for="password">Senha</label>
+  <input required name="password" id="password" type="password"><br>
+
+  <label for="email">Email</label>
+  <input required name="email" id="email" type="email"><br>
+
+  <label for="phone">Telefone</label>
+  <input required name="phone" id="phone" type="tel"><br>
+
+  <button class="btn waves-effect waves-light" type="submit" name="action">Enviar
+    <i class="material-icons right">send</i>
+  </button>
+  <button class="btn waves-effect waves-light" type="reset" name="action">Limpar
+    <i class="material-icons right">delete_sweep</i>
+  </button>
+</form>
+
+<span id="error"></span>
+
+<% if (error) { %>
+  <span><%= error %></span>
+<% } %>
+
+<!-- Botão de controle da tabela -->
+<button id="toggleTableBtn">Mostrar Tabela</button>
+
+<table id="userTable" style="display: none; margin-top: 10px;">
+  <thead>
+    <tr>
+      <th>ID</th>
+    <% for (let col of cols) { %>
+      <th><%= col %></th>
+    <% } %>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (users && users.length > 0) { %>
+      <% users.forEach(user => { %>
+        <tr>
+          <td><%= user.id %></td>
+          <td><%= user.username %></td>
+          <td><%= user.password %></td>
+          <td><%= user.email %></td>
+          <td><%= user.phone %></td>
+          <td>
+            <button onclick="editUser('<%= user.id %>')">Editar</button>
+            <button onclick="deleteUser('<%= user.id %>')">Excluir</button>
+          </td>
+        </tr>
+      <% }); %>
+    <% } else { %>
+      <tr>
+        <td colspan="<%= cols.length %>">Nenhum usuário encontrado.</td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+  // Botão de mostrar/esconder tabela
+  $(document).ready(function () {
+    $('#toggleTableBtn').click(function () {
+      $('#userTable').slideToggle(300);
+      const atual = $(this).text();
+      $(this).text(atual === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+    });
+  });
+
+  const form = document.getElementById('userForm')
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault()
+    const user = mountDataForm()
+
+    let id = document.getElementById("id").value
+    let METHOD = id ? `PUT` : 'POST'
+    let URL = id ? `/users/${id}` : '/users'
+
+    createOrUpdate(user, URL, METHOD)
+  })
+
+  function createOrUpdate(user, URL, METHOD) {
+    fetch(URL, {
+      method: METHOD,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(user)
+    })
+    .then(async (res) => { return await checkERROR(res) })
+    .then(() => {
+      form.reset()
+      window.location.reload()
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || "Erro ao salvar"
+    })
+  }
+
+  function editUser(id) {
+    fetch("/users/" + id, {
+      method: "GET"
+    })
+    .then(async (res) => { return await checkERROR(res) })
+    .then((user) => {
+      for (let prop in user) {
+        const input = document.querySelector(`input[name="${prop}"]`)
+        if (input) input.value = user[prop]
+      }
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || error
+    })
+  }
+
+  function deleteUser(id) {
+    fetch("/users/" + id, {
+      method: "DELETE"
+    })
+    .then(async (res) => { return await checkERROR(res) })
+    .then(() => {
+      window.location.reload()
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || error
+    })
+  }
+
+  async function checkERROR(res) {
+    if (!res.ok) {
+      let err = { message: 'Erro desconhecido' }
+      try {
+        err = await res.json()
+      } catch (e) {}
+      throw err
+    }
+    return res.json()
+  }
+
+  function mountDataForm() {
+    const formData = new FormData(form)
+    const user = {}
+    formData.forEach((v, k) => {
+      user[k] = v
+    })
+    return user
+  }
+</script>

@@ -1,0 +1,141 @@
+<h1>Gestão de Tutores</h1>
+
+<form id="tutorForm">
+  <input type="hidden" name="id" id="id">
+
+  <label>Nome</label>
+  <input required name="nome" id="nome" type="text"><br>
+
+  <label>Contato</label>
+  <input required name="contato" id="contato" type="text"><br>
+
+  <label>Endereço</label>
+  <input required name="endereco" id="endereco" type="text"><br>
+
+  <label>Pets Associados</label>
+  <input name="pets_associados" id="pets_associados" type="text"><br>
+
+  <button type="submit">Enviar</button>
+  <button type="reset">Cancelar</button>
+</form>
+
+<span id="error"></span>
+
+<!-- Botão para mostrar/esconder tabela -->
+<button id="toggleTableBtn">Mostrar Tabela</button>
+
+<table id="tutorTable" style="display: none; margin-top: 10px;">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th>Contato</th>
+      <th>Endereço</th>
+      <th>Pets Associados</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (tutors && tutors.length > 0) { %>
+      <% tutors.forEach(tutor => { %>
+        <tr>
+          <td><%= tutor.id %></td>
+          <td><%= tutor.nome %></td>
+          <td><%= tutor.contato %></td>
+          <td><%= tutor.endereco %></td>
+          <td><%= tutor.pets_associados %></td>
+          <td>
+            <button onclick="editTutor('<%= tutor.id %>')">Editar</button>
+            <button onclick="deleteTutor('<%= tutor.id %>')">Excluir</button>
+          </td>
+        </tr>
+      <% }) %>
+    <% } else { %>
+      <tr>
+        <td colspan="6">Nenhum tutor encontrado.</td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+  // Botão mostrar/esconder a tabela
+  $(document).ready(function () {
+    $('#toggleTableBtn').click(function () {
+      $('#tutorTable').slideToggle(300);
+      const atual = $(this).text();
+      $(this).text(atual === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+    });
+  });
+
+  const form = document.getElementById('tutorForm');
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const tutor = mountDataForm();
+    const id = document.getElementById("id").value;
+    const METHOD = id ? 'PUT' : 'POST';
+    const URL = id ? `/tutors/${id}` : '/tutors';
+    createOrUpdate(tutor, URL, METHOD);
+  });
+
+  function createOrUpdate(tutor, URL, METHOD) {
+    fetch(URL, {
+      method: METHOD,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(tutor)
+    })
+    .then(async (res) => await checkERROR(res))
+    .then(() => {
+      form.reset();
+      window.location.reload();
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || "Erro ao salvar";
+    });
+  }
+
+  function editTutor(id) {
+    fetch("/tutors/" + id, { method: "GET" })
+    .then(async (res) => await checkERROR(res))
+    .then((tutor) => {
+      for (let prop in tutor) {
+        const input = document.querySelector(`input[name="${prop}"]`);
+        if (input) input.value = tutor[prop];
+      }
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || error;
+    });
+  }
+
+  function deleteTutor(id) {
+    fetch("/tutors/" + id, { method: "DELETE" })
+    .then(async (res) => await checkERROR(res))
+    .then(() => {
+      window.location.reload();
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = JSON.stringify(error);
+    });
+  }
+
+  async function checkERROR(res) {
+    if (!res.ok) {
+      let err = { message: 'Erro desconhecido' };
+      try { err = await res.json(); } catch (e) {}
+      throw err;
+    }
+    return res.json();
+  }
+
+  function mountDataForm() {
+    const formData = new FormData(form);
+    const tutor = {};
+    formData.forEach((v, k) => { tutor[k] = v; });
+    return tutor;
+  }
+</script>

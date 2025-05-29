@@ -1,0 +1,149 @@
+<h1><%= title %></h1>
+
+<form id="serviceForm" action="">
+  <input type="hidden" name="id" id="id">
+
+  <label for="nome">Nome</label>
+  <input required name="nome" id="nome" type="text"><br>
+
+  <label for="descricao">Descrição</label>
+  <input required name="descricao" id="descricao" type="text"><br>
+
+  <label for="preco">Preço</label>
+  <input required name="preco" id="preco" type="number" step="0.01"><br>
+
+  <button type="submit">Enviar</button>
+  <button type="reset">Cancelar</button>
+</form>
+
+<span id="error"></span>
+
+<% if (error) { %>
+  <span><%= JSON.stringify(error) %></span>
+<% } %>
+
+<!-- Botão para mostrar/esconder tabela -->
+<button id="toggleTableBtn">Mostrar Tabela</button>
+
+<table id="serviceTable" style="display: none; margin-top: 10px;">
+  <thead>
+   <tr>
+      <th>ID</th>
+    <% for (let col of cols) { %>
+      <th><%= col %></th>
+    <% } %>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (services && services.length > 0) { %>
+      <% services.forEach(service => { %>
+        <tr>
+          <td><%= service.id %></td>
+          <td><%= service.nome %></td>
+          <td><%= service.descricao %></td>
+          <td>R$ <%= parseFloat(service.preco).toFixed(2) %></td>
+          <td>
+            <button type="button" onclick="editService('<%= service.id %>')">Editar</button>
+            <button type="button" onclick="deleteService('<%= service.id %>')">Excluir</button>
+          </td>
+        </tr>
+      <% }) %>
+    <% } else { %>
+      <tr>
+        <td colspan="4">Nenhum serviço encontrado.</td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+  // Alternar exibição da tabela com jQuery
+  $(document).ready(function () {
+    $('#toggleTableBtn').click(function () {
+      $('#serviceTable').slideToggle(300);
+      const atual = $(this).text();
+      $(this).text(atual === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+    });
+  });
+
+  const form = document.getElementById('serviceForm');
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const service = mountDataForm();
+
+    const id = document.getElementById("id").value;
+    const METHOD = id ? 'PUT' : 'POST';
+    const URL = id ? `/services/${id}` : '/services';
+
+    createOrUpdate(service, URL, METHOD);
+  });
+
+  function createOrUpdate(service, URL, METHOD) {
+    fetch(URL, {
+      method: METHOD,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(service)
+    })
+    .then(async (res) => await checkERROR(res))
+    .then(() => {
+      form.reset();
+      window.location.reload();
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || "Erro ao salvar";
+    });
+  }
+
+  function editService(id) {
+    fetch("/services/" + id, { method: "GET" })
+    .then(async (res) => await checkERROR(res))
+    .then((service) => {
+      for (let prop in service) {
+        const input = document.querySelector(`input[name="${prop}"]`);
+        if (input) input.value = service[prop];
+      }
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || error;
+    });
+  }
+
+  function deleteService(id) {
+    fetch("/services/" + id, { method: "DELETE" })
+    .then(async (res) => await checkERROR(res))
+    .then(() => {
+      window.location.reload();
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = JSON.stringify(error);
+    });
+  }
+
+  async function checkERROR(res) {
+    if (!res.ok) {
+      let err = { message: 'Erro desconhecido' };
+      try {
+        err = await res.json();
+      } catch (e) {}
+      throw err;
+    }
+    return res.json();
+  }
+
+  function mountDataForm() {
+    const formData = new FormData(form);
+    const service = {};
+    formData.forEach((v, k) => {
+      if (k === 'preco') {
+        service[k] = parseFloat(v) || 0;
+      } else {
+        service[k] = v;
+      }
+    });
+    return service;
+  }
+</script>

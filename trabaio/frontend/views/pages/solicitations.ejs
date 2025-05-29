@@ -1,0 +1,153 @@
+<h1><%= title %></h1>
+
+<form id="solicitationForm" action="">
+  <input required type="hidden" name="id" id="id">
+
+  <label for="tutor">Tutor</label>
+  <input required name="tutor" id="tutor" type="text"><br>
+
+  <label for="pet">Pet</label>
+  <input required name="pet" id="pet" type="text"><br>
+
+  <label for="servico">Serviço</label>
+  <input required name="servico" id="servico" type="text"><br>
+
+  <label for="data_hora">Data/Hora</label>
+  <input required name="data_hora" id="data_hora" type="text"><br>
+
+  <label for="status">Status</label>
+  <input required name="status" id="status" type="text"><br>
+
+  <button type="submit">Enviar</button>
+  <button type="reset">Cancelar</button>
+</form>
+
+<span id="error"></span>
+
+<% if (error) { %>
+  <span><%= JSON.stringify(error) %></span>
+<% } %>
+
+<!-- Botão para mostrar/esconder tabela -->
+<button id="toggleTableBtn">Mostrar Tabela</button>
+
+<table id="solicitationTable" style="display: none; margin-top: 10px;">
+  <thead>
+    <tr>
+      <th>ID</th>
+    <% for (let col of cols) { %>
+      <th><%= col %></th>
+    <% } %>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (solicitations && solicitations.length > 0) { %>
+      <% solicitations.forEach(solicitation => { %>
+        <tr>
+          <td><%= solicitation.id %></td>
+          <td><%= solicitation.tutor %></td>
+          <td><%= solicitation.pet %></td>
+          <td><%= solicitation.servico %></td>
+          <td><%= solicitation.data_hora %></td>
+          <td><%= solicitation.status %></td>
+          <td>
+            <button onclick="editSolicitation('<%= solicitation.id %>')">Editar</button>
+            <button onclick="deleteSolicitation('<%= solicitation.id %>')">Excluir</button>
+          </td>
+        </tr>
+      <% }) %>
+    <% } else { %>
+      <tr>
+        <td colspan="6">Nenhuma solicitação encontrada.</td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<!-- jQuery CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+  // Botão mostrar/esconder a tabela
+  $(document).ready(function () {
+    $('#toggleTableBtn').click(function () {
+      $('#solicitationTable').slideToggle(300);
+      const atual = $(this).text();
+      $(this).text(atual === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+    });
+  });
+
+  const form = document.getElementById('solicitationForm');
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const solicitation = mountDataForm();
+
+    const id = document.getElementById("id").value;
+    const METHOD = id ? 'PUT' : 'POST';
+    const URL = id ? `/solicitations/${id}` : '/solicitations';
+
+    createOrUpdate(solicitation, URL, METHOD);
+  });
+
+  function createOrUpdate(solicitation, URL, METHOD) {
+    fetch(URL, {
+      method: METHOD,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(solicitation)
+    })
+    .then(async (res) => await checkERROR(res))
+    .then(() => {
+      form.reset();
+      window.location.reload();
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || "Erro ao salvar";
+    });
+  }
+
+  function editSolicitation(id) {
+    fetch("/solicitations/" + id, { method: "GET" })
+    .then(async (res) => await checkERROR(res))
+    .then((solicitation) => {
+      for (let prop in solicitation) {
+        const input = document.querySelector(`input[name="${prop}"]`);
+        if (input) input.value = solicitation[prop];
+      }
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = error.message || error;
+    });
+  }
+
+  function deleteSolicitation(id) {
+    fetch("/solicitations/" + id, { method: "DELETE" })
+    .then(async (res) => await checkERROR(res))
+    .then(() => {
+      window.location.reload();
+    })
+    .catch((error) => {
+      document.getElementById('error').innerText = JSON.stringify(error);
+    });
+  }
+
+  async function checkERROR(res) {
+    if (!res.ok) {
+      let err = { message: 'Erro desconhecido' };
+      try {
+        err = await res.json();
+      } catch (e) {}
+      throw err;
+    }
+    return res.json();
+  }
+
+  function mountDataForm() {
+    const formData = new FormData(form);
+    const solicitation = {};
+    formData.forEach((v, k) => {
+      solicitation[k] = v;
+    });
+    return solicitation;
+  }
+</script>

@@ -1,0 +1,218 @@
+<div class="container">
+  <h3 class="header center teal-text text-darken-2"><%= title %></h3>
+
+  <%# Container para exibir erros, se houver %>
+  <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+    <div class="row">
+      <div class="col s12">
+        <div class="card-panel red lighten-2 white-text">
+          <strong>Erro:</strong> <%= error %>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <div id="cart-items-container">
+    <%# Os itens do carrinho serão renderizados aqui pelo JavaScript %>
+  </div>
+
+  <div class="row" id="cart-summary" style="display: none;"> <%# Começa escondido %>
+    <div class="col s12 m8 offset-m2 l6 offset-l3">
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title">Resumo do Pedido</span>
+          <p><strong>Total de Itens:</strong> <span id="total-items">0</span></p>
+          <p><strong>Valor Total:</strong> R$ <span id="total-price">0.00</span></p>
+        </div>
+        <div class="card-action center-align">
+          <button class="btn waves-effect waves-light green darken-1" id="checkout-btn">Finalizar Solicitação</button>
+          <button class="btn waves-effect waves-light red lighten-1" id="clear-cart-btn" style="margin-top: 10px;">Limpar Carrinho</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="empty-cart-message" class="center-align" style="display: none;"> <%# Começa escondido %>
+    <i class="large material-icons grey-text text-lighten-1">remove_shopping_cart</i>
+    <h5>Seu carrinho está vazio.</h5>
+    <p><a href="/userservices">Clique aqui</a> para ver nossos serviços.</p>
+  </div>
+
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const cartItemsContainer = document.getElementById('cart-items-container');
+    const cartSummaryDiv = document.getElementById('cart-summary');
+    const totalItemsSpan = document.getElementById('total-items');
+    const totalPriceSpan = document.getElementById('total-price');
+    const emptyCartMessageDiv = document.getElementById('empty-cart-message');
+    const clearCartButton = document.getElementById('clear-cart-btn');
+    const checkoutButton = document.getElementById('checkout-btn');
+    
+    const globalCartBadge = document.querySelector('.cart-badge'); 
+
+    function updateGlobalCartBadgeDisplay() {
+      if (!globalCartBadge) return; 
+
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      const totalItemCount = cart.reduce((sum, item) => sum + (item.quantidade || 0), 0); 
+      
+      if (totalItemCount > 0) {
+        globalCartBadge.textContent = totalItemCount;
+        globalCartBadge.style.display = 'block';
+      } else {
+        globalCartBadge.style.display = 'none';
+      }
+    }
+
+    function renderCart() {
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      // GARANTE QUE O CONTAINER DOS ITENS SEJA LIMPO
+      if (cartItemsContainer) {
+        cartItemsContainer.innerHTML = ''; 
+      }
+
+      if (cart.length === 0) {
+        if (cartSummaryDiv) cartSummaryDiv.style.display = 'none'; 
+        if (emptyCartMessageDiv) emptyCartMessageDiv.style.display = 'block'; 
+      } else {
+        if (cartSummaryDiv) cartSummaryDiv.style.display = 'block'; 
+        if (emptyCartMessageDiv) emptyCartMessageDiv.style.display = 'none'; 
+        
+        let runningTotalPrice = 0;
+        let runningTotalItems = 0;
+
+        const ul = document.createElement('ul');
+        ul.className = 'collection with-header';
+        const headerLi = document.createElement('li');
+        headerLi.className = 'collection-header';
+        headerLi.innerHTML = '<h4>Itens no Carrinho</h4>';
+        ul.appendChild(headerLi);
+
+        cart.forEach((item, index) => {
+          const li = document.createElement('li');
+          li.className = 'collection-item avatar';
+          
+          const icon = document.createElement('i');
+          icon.className = 'material-icons circle teal';
+          icon.textContent = 'work_outline'; 
+
+          const title = document.createElement('span');
+          title.className = 'title';
+          title.textContent = item.nome;
+
+          const priceInfo = document.createElement('p');
+          const itemQuantity = item.quantidade || 1;
+          priceInfo.innerHTML = `Preço: R$ ${parseFloat(item.preco).toFixed(2)} <br> Quantidade: ${itemQuantity}`;
+
+          const secondaryContent = document.createElement('a');
+          secondaryContent.href = '#!';
+          secondaryContent.className = 'secondary-content waves-effect waves-light red-text remove-item-btn tooltipped';
+          secondaryContent.dataset.position = "left";
+          secondaryContent.dataset.tooltip = "Remover Item";
+          secondaryContent.dataset.itemIndex = index; 
+          const removeIcon = document.createElement('i');
+          removeIcon.className = 'material-icons';
+          removeIcon.textContent = 'delete_forever';
+          secondaryContent.appendChild(removeIcon);
+
+          li.appendChild(icon);
+          li.appendChild(title);
+          li.appendChild(priceInfo);
+          li.appendChild(secondaryContent);
+          ul.appendChild(li);
+
+          runningTotalPrice += parseFloat(item.preco) * itemQuantity;
+          runningTotalItems += itemQuantity;
+        });
+
+        if (cartItemsContainer) cartItemsContainer.appendChild(ul);
+        if (totalItemsSpan) totalItemsSpan.textContent = runningTotalItems;
+        if (totalPriceSpan) totalPriceSpan.textContent = runningTotalPrice.toFixed(2);
+
+        var tooltippedElems = document.querySelectorAll('.tooltipped');
+        if (M && M.Tooltip) { // Verifica se Materialize e Tooltip estão disponíveis
+            M.Tooltip.init(tooltippedElems);
+        }
+        
+        document.querySelectorAll('.remove-item-btn').forEach(button => {
+          button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const itemIndexToRemove = parseInt(this.dataset.itemIndex);
+            removeItemFromCart(itemIndexToRemove);
+          });
+        });
+      }
+      updateGlobalCartBadgeDisplay(); 
+    }
+
+    function removeItemFromCart(index) {
+      let cart = JSON.parse(localStorage.getItem('cart')) || [];
+      if (index >= 0 && index < cart.length) {
+        const removedItem = cart.splice(index, 1)[0];
+        localStorage.setItem('cart', JSON.stringify(cart));
+        if (M && M.toast) M.toast({html: `${removedItem.nome} removido do carrinho.`});
+        renderCart(); 
+      }
+    }
+
+    if (clearCartButton) {
+      clearCartButton.addEventListener('click', function() {
+        localStorage.removeItem('cart');
+        if (M && M.toast) M.toast({html: 'Carrinho esvaziado!'});
+        renderCart(); 
+      });
+    }
+
+    if (checkoutButton) {
+      checkoutButton.addEventListener('click', function() {
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        if (cart.length === 0) {
+          if (M && M.toast) M.toast({html: 'Seu carrinho está vazio!'});
+          return;
+        }
+
+        const petInfo = "Pet a ser definido"; 
+        const nomesDosServicos = cart.map(item => `${item.nome} (R$ ${parseFloat(item.preco).toFixed(2)})`).join('; ');
+        const dataHoraAtual = new Date().toISOString();
+
+        const solicitationData = {
+          pet: petInfo,
+          servico: nomesDosServicos,
+          data_hora: dataHoraAtual,
+          status: "Solicitado"
+        };
+        
+        fetch('/solicitations', { 
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(solicitationData)
+        })
+        .then(async response => {
+          const responseBody = await response.json().catch(() => ({ 
+            error: `Erro do servidor: ${response.statusText || 'Resposta inválida.'}` 
+          }));
+          if (!response.ok) {
+            throw responseBody.error ? responseBody : new Error(responseBody.error || `Erro HTTP: ${response.status}`); 
+          }
+          return responseBody;
+        })
+        .then(data => {
+          if (M && M.toast) M.toast({html: data.message || 'Solicitação enviada com sucesso!'});
+          localStorage.removeItem('cart'); 
+          renderCart(); // CHAMADA CRÍTICA PARA ATUALIZAR A UI
+        })
+        .catch(error => {
+          console.error('Erro ao finalizar solicitação:', error);
+          const errorMessage = error.error || error.message || 'Não foi possível enviar a solicitação.';
+          if (M && M.toast) M.toast({html: `Erro: ${errorMessage}`});
+        });
+      });
+    }
+    
+    renderCart();
+  });
+</script>
