@@ -5,28 +5,38 @@ var verifyJWT = require('../auth/verify-token');
 
 const db = require('../database/config'); // Caminho relativo de 'routes' para 'database/config.js'
 
-// Criar a tabela de produtos, se não existir
+// Ajuste da tabela de produtos para novos campos
 db.run(`CREATE TABLE IF NOT EXISTS products (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   nome TEXT,
   descricao TEXT,
   preco REAL,
   estoque INTEGER,
-  categoria TEXT
+  categoria TEXT,
+  animal TEXT,
+  images TEXT
 )`, (err) => {
   if (err) {
-    console.error('Erro ao criar a tabela products:', err);
+    console.error('Erro ao criar/ajustar a tabela products:', err);
   } else {
-    console.log('Tabela products criada com sucesso!');
+    console.log('Tabela products criada/ajustada com sucesso!');
   }
 });
 
 // Criar produto
 router.post('/', verifyJWT, (req, res) => {
-  const { nome, descricao, preco, estoque, categoria } = req.body;
+  const { nome, descricao, preco, estoque, categoria, animal, images } = req.body;
   db.run(
-    'INSERT INTO products (nome, descricao, preco, estoque, categoria) VALUES (?, ?, ?, ?, ?)',
-    [nome, descricao, preco, estoque, categoria],
+    'INSERT INTO products (nome, descricao, preco, estoque, categoria, animal, images) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [
+      nome,
+      descricao,
+      preco,
+      estoque,
+      categoria,
+      animal || null,
+      images ? JSON.stringify(images) : null
+    ],
     (err) => {
       if (err) {
         console.error('Erro ao inserir produto: ', err);
@@ -44,6 +54,11 @@ router.get('/', verifyJWT, (req, res) => {
       console.error('Erro ao buscar produtos: ', err);
       return res.status(500).send({ error: 'Erro ao buscar produtos' });
     }
+    // Parse images para array, se existir
+    products = products.map(p => ({
+      ...p,
+      images: p.images ? JSON.parse(p.images) : []
+    }));
     res.status(200).send(products);
   });
 });
@@ -59,6 +74,7 @@ router.get('/:id', (req, res) => {
     if (!row) {
       return res.status(404).json({ error: 'Produto não encontrado' });
     }
+    row.images = row.images ? JSON.parse(row.images) : [];
     res.status(200).json(row);
   });
 });
@@ -66,11 +82,20 @@ router.get('/:id', (req, res) => {
 // Atualizar produto por completo
 router.put('/:id', (req, res) => {
   const { id } = req.params;
-  const { nome, descricao, preco, estoque, categoria } = req.body;
+  const { nome, descricao, preco, estoque, categoria, animal, images } = req.body;
 
   db.run(
-    'UPDATE products SET nome = ?, descricao = ?, preco = ?, estoque = ?, categoria = ? WHERE id = ?',
-    [nome, descricao, preco, estoque, categoria, id],
+    'UPDATE products SET nome = ?, descricao = ?, preco = ?, estoque = ?, categoria = ?, animal = ?, images = ? WHERE id = ?',
+    [
+      nome,
+      descricao,
+      preco,
+      estoque,
+      categoria,
+      animal || null,
+      images ? JSON.stringify(images) : null,
+      id
+    ],
     function (err) {
       if (err) {
         console.error('Erro ao atualizar o produto: ', err);
@@ -97,7 +122,11 @@ router.patch('/:id', (req, res) => {
 
   const setClause = keys.map((key) => `${key} = ?`).join(', ');
 
-  db.run(`UPDATE products SET ${setClause} WHERE id = ?`, [...values, id], function (err) {
+  const finalValues = keys.map((key, idx) =>
+    key === 'images' ? JSON.stringify(values[idx]) : values[idx]
+  );
+
+  db.run(`UPDATE products SET ${setClause} WHERE id = ?`, [...finalValues, id], function (err) {
     if (err) {
       console.error('Erro ao atualizar parcialmente o produto: ', err);
       return res.status(500).json({ error: 'Erro ao atualizar o produto' });

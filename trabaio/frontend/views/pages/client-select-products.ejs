@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DomesticPets - Nossos Produtos</title>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="products-container">
+        <div class="products-search-filters">
+            <div class="products-search-bar">
+                <input type="text" id="searchInput" placeholder="Pesquisar produtos...">
+                <button id="searchButton">Pesquisar</button>
+            </div>
+        </div>
+
+        <div class="products-grid" id="productGrid">
+            <!-- Produtos renderizados via JS -->
+        </div>
+
+        <div class="products-pagination" id="pagination">
+            <!-- Paginação dinâmica aqui -->
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Elementos da página
+        const productGrid = document.getElementById('productGrid');
+        const paginationContainer = document.getElementById('pagination');
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+
+        // Pega todos os produtos já renderizados pelo EJS e transforma em array JS
+        const allProducts = <%- JSON.stringify(produtos) %>.map(p => ({
+            id: p.id,
+            name: p.nome,
+            description: p.descricao,
+            price: p.preco,
+            brand: p.brand || "",
+            category: p.categoria,
+            animal: p.animal,
+            images: p.images || []
+        }));
+
+        let currentFilteredProducts = [];
+        let currentPage = 1;
+        const itemsPerPage = 8;
+
+        function renderProducts() {
+            productGrid.innerHTML = '';
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedProducts = currentFilteredProducts.slice(start, end);
+
+            if (paginatedProducts.length === 0) {
+                productGrid.innerHTML = '<p style="text-align: center; color: #777;">Nenhum produto encontrado com os filtros e pesquisa aplicados.</p>';
+                return;
+            }
+
+            paginatedProducts.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.classList.add('product-card');
+
+                productCard.innerHTML = `
+                    <div class="product-images">
+                        ${(product.images && product.images.length > 0)
+                            ? product.images.slice(0, 3).map(imgSrc => `<img src="${imgSrc}" alt="${product.name}">`).join('')
+                            : `<img src="/img/no-image.png" alt="Sem imagem">`
+                        }
+                    </div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-brand">${product.brand}</div>
+                    <div class="product-description">${product.description}</div>
+                    <div class="product-price">R$ ${product.price.toFixed(2).replace('.', ',')}</div>
+                    <div class="product-category">${product.category} | ${product.animal}</div>
+                    <button class="product-add-cart-btn">Adicionar ao Carrinho</button>
+                `;
+                productGrid.appendChild(productCard);
+            });
+        }
+
+        function renderPagination() {
+            paginationContainer.innerHTML = '';
+            const totalPages = Math.ceil(currentFilteredProducts.length / itemsPerPage);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                if (i === currentPage) button.classList.add('active');
+                button.addEventListener('click', () => {
+                    currentPage = i;
+                    renderProducts();
+                    updatePaginationButtons();
+                });
+                paginationContainer.appendChild(button);
+            }
+        }
+
+        function updatePaginationButtons() {
+            const buttons = paginationContainer.querySelectorAll('button');
+            buttons.forEach(btn => {
+                if (parseInt(btn.textContent) === currentPage) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function applyFiltersAndRender() {
+            let productsToFilter = [...allProducts];
+
+            // Pesquisa
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            if (searchTerm) {
+                productsToFilter = productsToFilter.filter(product =>
+                    product.name.toLowerCase().includes(searchTerm) ||
+                    product.brand.toLowerCase().includes(searchTerm) ||
+                    product.description.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            currentFilteredProducts = productsToFilter;
+            currentPage = 1;
+            renderProducts();
+            renderPagination();
+        }
+
+        // Listeners
+        searchButton.addEventListener('click', applyFiltersAndRender);
+        searchInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') applyFiltersAndRender();
+        });
+
+        // Inicialização
+        applyFiltersAndRender();
+    });
+    </script>
+</body>
+</html>
