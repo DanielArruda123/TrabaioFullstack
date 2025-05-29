@@ -82,7 +82,7 @@ router.post('/admin', (req, res) => {
 
             const token = jwt.sign(
                 { id: row.id, username: row.username, role: row.role },
-                process.env.TOKEN,
+                'f7c74e23b069884c186e9c8f478b32522759e88e1d112ccf1e23ec25c2d4607b',
                 { expiresIn: '1h' }
             );
             

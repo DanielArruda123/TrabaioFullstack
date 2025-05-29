@@ -5,12 +5,10 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var session = require('express-session');
 var bodyParser = require('body-parser');
-
+require('../node_modules/dotenv').config({path:'../.env'});
 var app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-require('../node_modules/dotenv').config({path:'../.env'});
 
 
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { jwtDecode } = require('jwt-decode');
-const url = process.env.BACK_URL +"/services";
+const url = process.env.BACK_URL + "/services";
 
 /* GET services listing. */
 router.get('/', function (req, res, next) {

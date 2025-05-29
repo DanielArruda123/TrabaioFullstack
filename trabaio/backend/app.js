@@ -3,7 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-
+require('../node_modules/dotenv').config({path:'../.env'});
 // Libs Auth
 var rateLimit = require('express-rate-limit');
 var session = require('express-session');
@@ -12,8 +12,6 @@ const cors = require('cors');
 const setTokenFromSessionForBrowser = require('./auth/setTokenFromSessionForBrowser'); // Middleware para ler token da sessão para o navegador
 
 var app = express();
-
-require('../node_modules/dotenv').config({path:'../.env'});
 
 // Middlewares Globais - Ordem Importante
 app.use(cors()); // CORS primeiro
