@@ -1,0 +1,305 @@
+<style>
+    /* Estilos específicos para a página do carrinho, se necessário, ou mova para seu /style.css */
+    .cart-item-details { display: flex; align-items: center; }
+    .cart-item-details img { width: 80px; height: 80px; object-fit: cover; margin-right: 15px; border-radius: 4px; }
+    .cart-item-actions button { margin: 0 5px; }
+    .cart-summary { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+    .cart-summary h5 { font-weight: bold; }
+    .empty-cart-message { text-align: center; padding: 40px 0; color: #757575; }
+    .empty-cart-message i { font-size: 3rem; display: block; margin-bottom: 10px; }
+    .collection-item.avatar .title { font-weight: bold; }
+    .collection-item .secondary-content { display: flex; align-items: center; }
+    .item-quantity-controls { display: inline-flex; align-items: center; margin-left: 10px;}
+    .item-quantity-controls .btn-tiny { padding: 0 8px; height: 28px; line-height: 28px; }
+    .item-quantity { margin: 0 8px; font-size: 1.1em; }
+    .btn-remove-item { color: #f44336 !important; /* Vermelho para o ícone de lixeira */}
+    .total-price-emphasis { font-size: 1.6em; color: #F57C00; font-weight: bold;}
+</style>
+
+<div class="container">
+    <h1 style="text-align: center; color: #F57C00; margin-bottom: 30px;"><%= typeof title !== 'undefined' ? title : 'Meu Carrinho' %></h1>
+
+    <div id="cartItemsContainer">
+        </div>
+
+    <div id="cartSummary" class="cart-summary">
+        </div>
+
+    <div id="additionalServiceInfo" class="row" style="margin-top: 20px; display: none;">
+        <div class="input-field col s12 m6">
+            <input id="solicitationPetName" type="text" class="validate">
+            <label for="solicitationPetName">Nome do Pet (para serviços)</label>
+        </div>
+        <div class="input-field col s12 m6">
+            <input id="solicitationDateTime" type="datetime-local" class="validate">
+            <label for="solicitationDateTime" class="active">Data e Hora Preferencial (para serviços)</label> </div>
+    </div>
+
+
+    <div class="row" style="margin-top: 30px;">
+        <div class="col s12 right-align">
+            <button id="finalizeOrderBtn" class="btn-large waves-effect waves-light orange" style="display: none;">
+                Finalizar Compra/Solicitação <i class="material-icons right">payment</i>
+            </button>
+        </div>
+    </div>
+
+    <div id="emptyCartMessage" style="display: none;" class="empty-cart-message">
+        <i class="material-icons grey-text text-lighten-1">shopping_cart_off</i>
+        <p>Seu carrinho está vazio.</p>
+        <a href="/userproducts" class="btn waves-effect waves-light orange" style="margin-right: 10px;">Ver Produtos</a>
+        <a href="/userservices" class="btn waves-effect waves-light orange">Ver Serviços</a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const cartItemsContainer = document.getElementById('cartItemsContainer');
+    const cartSummaryContainer = document.getElementById('cartSummary');
+    const finalizeOrderBtn = document.getElementById('finalizeOrderBtn');
+    const emptyCartMessage = document.getElementById('emptyCartMessage');
+    const additionalServiceInfoDiv = document.getElementById('additionalServiceInfo');
+
+
+    function getCart() {
+        return JSON.parse(localStorage.getItem('shoppingCart')) || [];
+    }
+
+    function saveCart(cart) {
+        localStorage.setItem('shoppingCart', JSON.stringify(cart));
+        updateCartBadge();
+        renderCart();
+    }
+
+    function renderCart() {
+        const cart = getCart();
+        cartItemsContainer.innerHTML = ''; 
+        cartSummaryContainer.innerHTML = '';
+        let hasServices = false;
+
+        if (cart.length === 0) {
+            finalizeOrderBtn.style.display = 'none';
+            additionalServiceInfoDiv.style.display = 'none';
+            emptyCartMessage.style.display = 'block';
+            updateCartBadge(); // Garante que o badge seja zerado
+            return;
+        }
+        
+        finalizeOrderBtn.style.display = 'block';
+        emptyCartMessage.style.display = 'none';
+
+        let subtotal = 0;
+        const ul = document.createElement('ul');
+        ul.className = 'collection with-header'; 
+        
+        const headerLi = document.createElement('li');
+        headerLi.className = 'collection-header';
+        headerLi.innerHTML = '<h4>Itens no Carrinho</h4>';
+        ul.appendChild(headerLi);
+
+        cart.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.className = 'collection-item avatar cart-item-entry'; 
+            
+            let itemHTML = '';
+            const itemPrice = parseFloat(item.price) || 0;
+            const itemQuantity = parseInt(item.quantity) || 1;
+            const itemTotal = itemPrice * itemQuantity;
+            subtotal += itemTotal;
+
+            const itemImage = item.image || '/img/no-image.png';
+
+            if (item.type === 'product') {
+                itemHTML = `
+                    <img src="${itemImage}" alt="${item.name}" class="circle">
+                    <span class="title">${item.name}</span>
+                    <p>Preço Unitário: R$ ${itemPrice.toFixed(2).replace('.', ',')}<br>
+                       Quantidade: 
+                       <div class="item-quantity-controls">
+                           <button class="btn-floating btn-small waves-effect waves-light orange lighten-2 quantity-decrease" data-index="${index}" ${itemQuantity <= 1 ? 'disabled' : ''}><i class="material-icons">remove</i></button>
+                           <span class="item-quantity">${itemQuantity}</span>
+                           <button class="btn-floating btn-small waves-effect waves-light orange lighten-2 quantity-increase" data-index="${index}"><i class="material-icons">add</i></button>
+                       </div>
+                    </p>
+                    <p>Subtotal: R$ ${itemTotal.toFixed(2).replace('.', ',')}</p>
+                    <a href="#!" class="secondary-content remove-item" data-index="${index}"><i class="material-icons btn-remove-item">delete_forever</i></a>
+                `;
+            } else if (item.type === 'service') {
+                hasServices = true;
+                itemHTML = `
+                    <i class="material-icons circle orange">content_cut</i>
+                    <span class="title">${item.name}</span>
+                    <p>Preço: R$ ${itemPrice.toFixed(2).replace('.', ',')}</p>
+                    <a href="#!" class="secondary-content remove-item" data-index="${index}"><i class="material-icons btn-remove-item">delete_forever</i></a>
+                `;
+            }
+            li.innerHTML = itemHTML;
+            ul.appendChild(li);
+        });
+
+        cartItemsContainer.appendChild(ul);
+
+        // Mostra campos de informação de serviço se houver serviços
+        additionalServiceInfoDiv.style.display = hasServices ? 'block' : 'none';
+
+        cartSummaryContainer.innerHTML = `
+            <h5>Resumo do Pedido</h5>
+            <p>Total de Itens: ${cart.reduce((acc, item) => acc + (item.quantity || 1), 0)}</p>
+            <p class="total-price-emphasis">Total Geral: R$ ${subtotal.toFixed(2).replace('.', ',')}</p>
+        `;
+
+        addCartItemEventListeners();
+        updateCartBadge(); // Atualiza o badge após renderizar o carrinho
+    }
+
+    function addCartItemEventListeners() {
+        // Usar delegação de eventos no container dos itens
+        cartItemsContainer.addEventListener('click', function(event) {
+            const target = event.target;
+            const removeItemButton = target.closest('.remove-item');
+            const decreaseButton = target.closest('.quantity-decrease');
+            const increaseButton = target.closest('.quantity-increase');
+
+            if (removeItemButton) {
+                event.preventDefault();
+                const indexToRemove = parseInt(removeItemButton.dataset.index);
+                removeItemFromCart(indexToRemove);
+            } else if (decreaseButton) {
+                const index = parseInt(decreaseButton.dataset.index);
+                changeItemQuantity(index, -1);
+            } else if (increaseButton) {
+                const index = parseInt(increaseButton.dataset.index);
+                changeItemQuantity(index, 1);
+            }
+        });
+    }
+
+    function removeItemFromCart(index) {
+        let cart = getCart();
+        if (index >= 0 && index < cart.length) {
+            const itemName = cart[index].name;
+            cart.splice(index, 1);
+            saveCart(cart); // Salva e re-renderiza
+            if (typeof M !== 'undefined' && M.toast) {
+                M.toast({ html: `${itemName} removido.`, classes: 'red rounded' });
+            } else {
+                alert(`${itemName} removido.`);
+            }
+        }
+    }
+
+    function changeItemQuantity(index, change) {
+        let cart = getCart();
+        if (index >= 0 && index < cart.length && cart[index].type === 'product') {
+            const newQuantity = (cart[index].quantity || 1) + change;
+            if (newQuantity >= 1) {
+                cart[index].quantity = newQuantity;
+            } else {
+                 // Opcional: não permitir quantidade 0, ou remover o item
+                cart[index].quantity = 1; 
+                // Ou se quiser remover:
+                // removeItemFromCart(index);
+                // return; // Sai da função se o item foi removido
+            }
+            saveCart(cart); // Salva e re-renderiza
+        }
+    }
+
+    function updateCartBadge() {
+        const cart = getCart();
+        const cartBadges = document.querySelectorAll('#cart-badge, #cart-badge-mobile'); 
+        let totalItems = 0;
+        cart.forEach(item => {
+            totalItems += (item.quantity || 1);
+        });
+        cartBadges.forEach(badge => {
+            if (badge) {
+                badge.textContent = totalItems > 0 ? String(totalItems) : '';
+                badge.setAttribute('data-badge-caption', totalItems > 0 ? String(totalItems) : '');
+                if (totalItems > 0) {
+                    badge.style.display = 'inline-block';
+                    badge.classList.add('new');
+                } else {
+                    badge.style.display = 'none';
+                    badge.classList.remove('new');
+                }
+            }
+        });
+    }
+
+    finalizeOrderBtn.addEventListener('click', async () => {
+        const cart = getCart();
+        if (cart.length === 0) {
+            M.toast({html: 'Seu carrinho está vazio!', classes: 'red rounded'});
+            return;
+        }
+
+        const solicitationPetName = document.getElementById('solicitationPetName') ? document.getElementById('solicitationPetName').value : null;
+        const solicitationDateTime = document.getElementById('solicitationDateTime') ? document.getElementById('solicitationDateTime').value : null;
+
+        const orderPayload = {
+            items: cart.map(item => {
+                let processedItem = {
+                    id: item.id,       // ID do produto ou serviço
+                    name: item.name,   // Nome do produto ou serviço
+                    price: item.price, // Preço unitário
+                    type: item.type    // 'product' ou 'service'
+                };
+                if (item.type === 'product') {
+                    processedItem.quantity = item.quantity;
+                } else if (item.type === 'service') {
+                    // Adiciona os campos de pet e data/hora se existirem para o serviço
+                    processedItem.pet = item.pet || solicitationPetName || 'Não especificado'; // Pega do item se definido, senão do campo geral
+                    processedItem.data_hora = item.data_hora || solicitationDateTime || null; // Pega do item se definido, senão do campo geral
+                    processedItem.status = 'Pendente'; // Status padrão para novos serviços
+                }
+                return processedItem;
+            }),
+            // Informações gerais que podem ser usadas se não forem específicas do item de serviço
+            geral_pet_name: solicitationPetName,
+            geral_data_hora: solicitationDateTime,
+            status_geral_servico: 'Pendente' // Status geral para solicitações de serviço
+        };
+
+        console.log("Payload do pedido a ser enviado:", JSON.stringify(orderPayload, null, 2));
+
+        // ### INÍCIO DO BLOCO DO PASSO 3: ENVIO PARA O BACKEND ###
+        // Este bloco será preenchido no próximo passo.
+        // Por enquanto, vamos simular o envio e limpar o carrinho.
+
+        // Exemplo de como poderia ser:
+        // const token = '<%= locals.token || "" %>'; // Isso não funciona bem em JS puro, o token tem que ser pego de outro lugar
+        // Para o fetch, o token precisa ser acessível (ex: de um objeto window ou um input hidden se necessário,
+        // mas o ideal é que a rota /userservices/cart já tenha o token na sessão e o JS não precise dele diretamente)
+        // No nosso caso, como a rota de finalização será chamada pelo cliente, o token já estará na sessão do backend.
+
+        M.toast({html: 'Simulação: Pedido/Solicitação sendo processada...', classes: 'blue rounded'});
+
+        // Simulando um tempo de processamento
+        setTimeout(() => {
+            // Limpar o carrinho após "envio" bem-sucedido
+            localStorage.removeItem('shoppingCart');
+            renderCart(); 
+            updateCartBadge();
+            
+            // Redirecionar ou mostrar mensagem de sucesso
+             M.toast({html: 'Pedido/Solicitação enviado com sucesso!', classes: 'green rounded', displayLength: 6000});
+            // window.location.href = '/meus-pedidos'; // Exemplo de redirecionamento
+        }, 1500);
+        // ### FIM DO BLOCO DO PASSO 3 ###
+    });
+
+    // Inicializar componentes Materialize (como campos de data/hora)
+    if (typeof M !== 'undefined') {
+      const datePickers = document.querySelectorAll('.datepicker');
+      M.Datepicker.init(datePickers, {format: 'dd/mm/yyyy'}); // Ajuste o formato se necessário
+      const timePickers = document.querySelectorAll('.timepicker');
+      M.Timepicker.init(timePickers); // Ajuste opções se necessário
+      // Para datetime-local, a estilização é mais limitada e depende do navegador,
+      // mas a label pode precisar ser ativada.
+      M.updateTextFields(); // Para ativar labels de inputs pré-preenchidos ou do tipo datetime-local
+    }
+    
+    renderCart(); // Renderiza o carrinho ao carregar a página
+});
+</script>

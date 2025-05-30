@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token ADM (Backend Direct)</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; margin: 40px; background-color: #f0f2f5; color: #333; display: flex; justify-content: center; align-items: center; min-height: calc(100vh - 80px); }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 100%; max-width: 600px; text-align: left; }
+        h1 { color: #333; margin-bottom: 20px; font-size: 1.8em; text-align: center;}
+        .token-box { background-color: #e9e9e9; padding: 15px; border: 1px solid #ccc; border-radius: 4px; word-break: break-all; margin-top: 15px; font-family: monospace; font-size: 0.9em; }
+        .error { background-color: #ffebee; color: #c62828; padding: 10px; margin-bottom: 20px; border-radius: 4px; border: 1px solid #ef9a9a; text-align: center;}
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .instructions { margin-top: 20px; font-size: 0.9em; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Resultado do Login ADM</h1>
+
+        <% if (typeof token !== 'undefined' && token) { %>
+            <p>Login bem-sucedido! Seu token JWT é (copie todo o conteúdo abaixo):</p>
+            <div class="token-box">
+                <p><strong><%= token %></strong></p>
+            </div>
+            <div class="instructions">
+                <p><strong>Como usar:</strong></p>
+                <ol>
+                    <li>Copie o token acima.</li>
+                    <li>Em ferramentas como Postman ou Insomnia, crie sua requisição para a API do backend (ex: GET http://localhost:4000/users).</li>
+                    <li>Vá para a aba "Headers" ou "Authorization".</li>
+                    <li>Adicione um novo header:
+                        <ul>
+                            <li><strong>Key:</strong> <code>Authorization</code></li>
+                            <li><strong>Value:</strong> <code>Bearer SEU_TOKEN_COPIADO_AQUI</code> (cole o token após "Bearer ").</li>
+                        </ul>
+                    </li>
+                    <li>Envie a requisição.</li>
+                </ol>
+            </div>
+        <% } else if (typeof error !== 'undefined' && error && error.length > 0) { %>
+            <p class="error">Erro no login: <%= error %></p>
+        <% } else { %>
+            <p>Algo deu errado ao processar sua solicitação.</p>
+        <% } %>
+        
+        <p style="margin-top: 30px; text-align: center;"><a href="/auth/admin-login-page">Voltar para o Login ADM</a></p>
+    </div>
+</body>
+</html>

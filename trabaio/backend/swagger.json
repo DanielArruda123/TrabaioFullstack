@@ -1,0 +1,1137 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API do Sistema de Petshop",
+    "version": "1.0.0",
+    "description": "API para gerenciamento de petshop com autenticação JWT"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000",
+      "description": "Servidor de Desenvolvimento"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "AdminAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Bem-vindo a API",
+        "tags": ["Geral"],
+        "responses": {
+          "200": {
+            "description": "Mensagem de boas-vindas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login de usuário",
+        "tags": ["Autenticação"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {"type": "string"},
+                  "password": {"type": "string"}
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login bem sucedido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {"type": "string"},
+                    "token": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "401": {"description": "Credenciais inválidas"},
+          "404": {"description": "Usuário não encontrado"},
+          "500": {"description": "Erro interno do servidor"}
+        }
+      }
+    },
+    "/auth/admin": {
+      "get": {
+        "summary": "Exibir formulário de login ADM",
+        "tags": ["Autenticação - ADM"],
+        "responses": {
+          "200": {"description": "Formulário de login ADM"},
+          "302": {"description": "Redireciona para links se já logado"}
+        }
+      },
+      "post": {
+        "summary": "Processar login ADM",
+        "tags": ["Autenticação - ADM"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {"type": "string"},
+                  "password": {"type": "string"}
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Login ADM bem sucedido (redireciona)"},
+          "400": {"description": "Requisição inválida"},
+          "401": {"description": "Senha incorreta"},
+          "404": {"description": "Usuário não encontrado"},
+          "500": {"description": "Erro interno do servidor"}
+        }
+      }
+    },
+    "/auth/admin/api-links": {
+      "get": {
+        "summary": "Página de links da API para ADM",
+        "tags": ["Autenticação - ADM"],
+        "security": [
+          {"AdminAuth": []}
+        ],
+        "responses": {
+          "200": {"description": "Links da API ADM"},
+          "302": {"description": "Redireciona para login ADM se não autenticado"}
+        }
+      }
+    },
+    "/auth/admin/logout": {
+      "get": {
+        "summary": "Logout ADM",
+        "tags": ["Autenticação - ADM"],
+        "responses": {
+          "302": {"description": "Redireciona para login ADM"}
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "Listar todos os usuários",
+        "tags": ["Usuários"],
+        "security": [
+          {
+            "AdminAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de usuários",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/register": {
+      "post": {
+        "summary": "Registrar novo usuário",
+        "tags": ["Usuários"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRegistration"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Usuário criado com sucesso"},
+          "400": {"description": "Nome do usuário já existe"},
+          "500": {"description": "Erro ao criar o usuário"}
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "summary": "Buscar usuário por ID",
+        "tags": ["Usuários"],
+        "security": [
+          {"AdminAuth": []}
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do usuário"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do usuário",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {"description": "Usuário não encontrado"},
+          "500": {"description": "Erro ao buscar usuário"}
+        }
+      },
+      "put": {
+        "summary": "Atualizar usuário por ID (completo)",
+        "tags": ["Usuários"],
+        "security": [
+          {"AdminAuth": []}
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do usuário"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Usuário atualizado com sucesso"},
+          "400": {"description": "Nenhum campo válido fornecido"},
+          "404": {"description": "Usuário não encontrado ou dados idênticos"},
+          "500": {"description": "Erro ao atualizar usuário"}
+        }
+      },
+      "patch": {
+        "summary": "Atualizar usuário por ID (parcial)",
+        "tags": ["Usuários"],
+        "security": [
+          {"AdminAuth": []}
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do usuário"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdatePartial"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Usuário atualizado parcialmente com sucesso"},
+          "400": {"description": "Nenhum campo fornecido"},
+          "404": {"description": "Usuário não encontrado ou dados idênticos"},
+          "500": {"description": "Erro ao atualizar usuário parcialmente"},
+          "delete": {
+            "summary": "Deletar usuário por ID",
+            "tags": ["Usuários"],
+            "security": [
+              {"AdminAuth": []}
+            ],
+            "parameters": [
+              {
+                "in": "path",
+                "name": "id",
+                "required": true,
+                "schema": {"type": "integer"},
+                "description": "ID do usuário"
+              }
+            ],
+            "responses": {
+              "200": {"description": "Usuário deletado com sucesso"},
+              "404": {"description": "Usuário não encontrado"},
+              "500": {"description": "Erro ao deletar usuário"}
+            }
+          }
+        }
+      }
+    },
+    "/pets": {
+      "get": {
+        "summary": "Listar todos os pets",
+        "tags": ["Pets"],
+        "security": [
+          {"BearerAuth": []}
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de pets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Pet"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Criar novo pet",
+        "tags": ["Pets"],
+        "security": [
+          {"BearerAuth": []}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PetCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pet criado com sucesso"
+          },
+          "500": {
+            "description": "Erro ao cadastrar o pet"
+          }
+        }
+      }
+    },
+    "/pets/{id}": {
+      "get": {
+        "summary": "Buscar pet por ID",
+        "tags": ["Pets"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do pet"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do pet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pet"
+                }
+              }
+            }
+          },
+          "404": {"description": "Pet não encontrado"},
+          "500": {"description": "Erro ao buscar pet"}
+        }
+      },
+      "put": {
+        "summary": "Atualizar pet por ID (completo)",
+        "tags": ["Pets"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do pet"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PetCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Pet atualizado com sucesso"},
+          "404": {"description": "Pet não encontrado"},
+          "500": {"description": "Erro ao atualizar o pet"}
+        }
+      },
+      "patch": {
+        "summary": "Atualizar pet por ID (parcial)",
+        "tags": ["Pets"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do pet"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PetCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Pet atualizado parcialmente com sucesso"},
+          "404": {"description": "Pet não encontrado"},
+          "500": {"description": "Erro ao atualizar o pet parcialmente"},
+          "delete": {
+            "summary": "Deletar pet por ID",
+            "tags": ["Pets"],
+            "security": [
+              {"BearerAuth": []}
+            ],
+            "parameters": [
+              {
+                "in": "path",
+                "name": "id",
+                "required": true,
+                "schema": {"type": "integer"},
+                "description": "ID do pet"
+              }
+            ],
+            "responses": {
+              "200": {"description": "Pet deletado com sucesso"},
+              "404": {"description": "Pet não encontrado"},
+              "500": {"description": "Erro ao deletar o pet"}
+            }
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "summary": "Listar todos os produtos",
+        "tags": ["Produtos"],
+        "security": [
+          {"BearerAuth": []}
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de produtos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Product"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Criar novo produto",
+        "tags": ["Produtos"],
+        "security": [
+          {"BearerAuth": []}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Produto criado com sucesso"
+          },
+          "500": {
+            "description": "Erro ao cadastrar o produto"
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "summary": "Buscar produto por ID",
+        "tags": ["Produtos"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do produto"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do produto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "404": {"description": "Produto não encontrado"},
+          "500": {"description": "Erro ao buscar produto"}
+        }
+      },
+      "put": {
+        "summary": "Atualizar produto por ID (completo)",
+        "tags": ["Produtos"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do produto"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Produto atualizado com sucesso"},
+          "404": {"description": "Produto não encontrado"},
+          "500": {"description": "Erro ao atualizar o produto"}
+        }
+      },
+      "patch": {
+        "summary": "Atualizar produto por ID (parcial)",
+        "tags": ["Produtos"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do produto"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCreationPartial"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Produto atualizado parcialmente com sucesso"},
+          "404": {"description": "Produto não encontrado"},
+          "500": {"description": "Erro ao atualizar o produto parcialmente"},
+          "delete": {
+            "summary": "Deletar produto por ID",
+            "tags": ["Produtos"],
+            "security": [
+              {"BearerAuth": []}
+            ],
+            "parameters": [
+              {
+                "in": "path",
+                "name": "id",
+                "required": true,
+                "schema": {"type": "integer"},
+                "description": "ID do produto"
+              }
+            ],
+            "responses": {
+              "200": {"description": "Produto deletado com sucesso"},
+              "404": {"description": "Produto não encontrado"},
+              "500": {"description": "Erro ao deletar o produto"}
+            }
+          }
+        }
+      }
+    },
+    "/services": {
+      "get": {
+        "summary": "Listar todos os serviços",
+        "tags": ["Serviços"],
+        "security": [
+          {"BearerAuth": []}
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de serviços",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Service"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Criar novo serviço",
+        "tags": ["Serviços"],
+        "security": [
+          {"AdminAuth": []}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Serviço criado com sucesso"
+          },
+          "500": {
+            "description": "Erro ao criar o serviço"
+          }
+        }
+      }
+    },
+    "/services/{id}": {
+      "get": {
+        "summary": "Buscar serviço por ID",
+        "tags": ["Serviços"],
+        "security": [
+          {"BearerAuth": []}
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do serviço"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do serviço",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Service"
+                }
+              }
+            }
+          },
+          "404": {"description": "Serviço não encontrado"},
+          "500": {"description": "Erro ao buscar o serviço"}
+        }
+      },
+      "put": {
+        "summary": "Atualizar serviço por ID (completo)",
+        "tags": ["Serviços"],
+        "security": [
+          {"AdminAuth": []}
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do serviço"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Serviço atualizado com sucesso"},
+          "404": {"description": "Serviço não encontrado"},
+          "500": {"description": "Erro ao atualizar o serviço"}
+        }
+      },
+      "patch": {
+        "summary": "Atualizar serviço por ID (parcial)",
+        "tags": ["Serviços"],
+        "security": [
+          {"AdminAuth": []}
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do serviço"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceCreationPartial"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Serviço atualizado parcialmente com sucesso"},
+          "404": {"description": "Serviço não encontrado"},
+          "500": {"description": "Erro ao atualizar o serviço parcialmente"},
+          "delete": {
+            "summary": "Deletar serviço por ID",
+            "tags": ["Serviços"],
+            "security": [
+              {"AdminAuth": []}
+            ],
+            "parameters": [
+              {
+                "in": "path",
+                "name": "id",
+                "required": true,
+                "schema": {"type": "integer"},
+                "description": "ID do serviço"
+              }
+            ],
+            "responses": {
+              "200": {"description": "Serviço deletado com sucesso"},
+              "404": {"description": "Serviço não encontrado"},
+              "500": {"description": "Erro ao deletar o serviço"}
+            }
+          }
+        }
+      }
+    },
+    "/solicitations": {
+      "get": {
+        "summary": "Listar todas as solicitações",
+        "tags": ["Solicitações"],
+        "security": [
+          {"BearerAuth": []}
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de solicitações",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Solicitation"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Criar nova solicitação",
+        "tags": ["Solicitações"],
+        "security": [
+          {"BearerAuth": []}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitationCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Solicitação criada com sucesso"
+          },
+          "401": {
+            "description": "Informação do usuário não encontrada no token."
+          },
+          "500": {
+            "description": "Erro ao criar a solicitação no banco de dados."
+          }
+        }
+      }
+    },
+    "/solicitations/{id}": {
+      "get": {
+        "summary": "Buscar solicitação por ID",
+        "tags": ["Solicitações"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID da solicitação"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados da solicitação",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Solicitation"
+                }
+              }
+            }
+          },
+          "404": {"description": "Solicitação não encontrada"},
+          "500": {"description": "Erro ao buscar a solicitação"}
+        }
+      },
+      "put": {
+        "summary": "Atualizar solicitação por ID (completo)",
+        "tags": ["Solicitações"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID da solicitação"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitationCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Solicitação atualizada com sucesso"},
+          "404": {"description": "Solicitação não encontrada"},
+          "500": {"description": "Erro ao atualizar a solicitação"}
+        }
+      },
+      "patch": {
+        "summary": "Atualizar solicitação por ID (parcial)",
+        "tags": ["Solicitações"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID da solicitação"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitationCreationPartial"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Solicitação atualizada parcialmente com sucesso"},
+          "404": {"description": "Solicitação não encontrada"},
+          "500": {"description": "Erro ao atualizar a solicitação parcialmente"},
+          "delete": {
+            "summary": "Deletar solicitação por ID",
+            "tags": ["Solicitações"],
+            "security": [
+              {"BearerAuth": []}
+            ],
+            "parameters": [
+              {
+                "in": "path",
+                "name": "id",
+                "required": true,
+                "schema": {"type": "integer"},
+                "description": "ID da solicitação"
+              }
+            ],
+            "responses": {
+              "200": {"description": "Solicitação deletada com sucesso"},
+              "404": {"description": "Erro ao deletar o serviço"},
+              "500": {"description": "Erro ao deletar a solicitação"}
+            }
+          }
+        }
+      }
+    },
+    "/tutors": {
+      "get": {
+        "summary": "Listar todos os tutores",
+        "tags": ["Tutores"],
+        "responses": {
+          "200": {
+            "description": "Lista de tutores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Tutor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Criar novo tutor",
+        "tags": ["Tutores"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TutorCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tutor criado com sucesso"
+          },
+          "500": {
+            "description": "Erro ao criar tutor"
+          }
+        }
+      },
+      "put": {
+        "summary": "Atualizar tutor por ID",
+        "tags": ["Tutores"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do tutor"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TutorCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Tutor atualizado"},
+          "404": {"description": "Tutor não encontrado"},
+          "500": {"description": "Erro ao atualizar tutor"},
+          "delete": {
+            "summary": "Deletar tutor por ID",
+            "tags": ["Tutores"],
+            "parameters": [
+              {
+                "in": "path",
+                "name": "id",
+                "required": true,
+                "schema": {"type": "integer"},
+                "description": "ID do tutor"
+              }
+            ],
+            "responses": {
+              "200": {"description": "Tutor deletado"},
+              "404": {"description": "Tutor não encontrado"},
+              "500": {"description": "Erro ao deletar tutor"}
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Atualizar tutor por ID (parcial)",
+        "tags": ["Tutores"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do tutor"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TutorCreationPartial"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Tutor atualizado parcialmente com sucesso"},
+          "404": {"description": "Tutor não encontrado"},
+          "500": {"description": "Erro ao atualizar o tutor parcialmente"}
+        }
+      }
+    },
+    "/tutors/{id}": {
+      "get": {
+        "summary": "Buscar tutor por ID",
+        "tags": ["Tutores"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do tutor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do tutor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tutor"
+                }
+              }
+            }
+          },
+          "404": {"description": "Tutor não encontrado"},
+          "500": {"description": "Erro ao buscar tutor"}
+        }
+      },
+      "put": {
+        "summary": "Atualizar tutor por ID",
+        "tags": ["Tutores"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do tutor"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TutorCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Tutor atualizado"},
+          "404": {"description": "Tutor não encontrado"},
+          "500": {"description": "Erro ao atualizar tutor"}
+        }
+      },
+      "delete": {
+        "summary": "Deletar tutor por ID",
+        "tags": ["Tutores"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID do tutor"
+          }
+        ],
+        "responses": {
+          "200": {"description": "Tutor deletado"},
+          "404": {"description": "Tutor não encontrado"},
+          "500": {"description": "Erro ao deletar tutor"}
+        }
+      }
+    }
+  }
+}
