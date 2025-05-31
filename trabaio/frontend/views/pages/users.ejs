@@ -21,17 +21,19 @@
   <button class="btn waves-effect waves-light" type="reset" name="action">Limpar
     <i class="material-icons right">delete_sweep</i>
   </button>
+  <button id="toggleTableBtn" class="btn waves-effect waves-light" type="reset" name="action">Mostrar Tabela
+    <i class="material-icons right"></i>
+  </button>
 </form>
 
 <span id="error"></span>
 
 <% if (error) { %>
   <span><%= error %></span>
-<% } %>
-
-<!-- Botão de controle da tabela -->
-<button id="toggleTableBtn">Mostrar Tabela</button>
-
+  <% } %>
+  
+  <!-- Botão de controle da tabela -->
+  
 <table id="userTable" style="display: none; margin-top: 10px;">
   <thead>
     <th>ID</th>
@@ -49,8 +51,13 @@
           <td><%= user.email %></td>
           <td><%= user.phone %></td>
           <td>
-            <button onclick="editUser('<%= user.id %>')">Editar</button>
-            <button onclick="deleteUser('<%= user.id %>')">Excluir</button>
+            <button class="btn-small waves-effect waves-light yellow darken-2" onclick="editUser('<%= user.id %>')">
+              <i class="material-icons">edit</i>
+            </button>
+
+          <button class="btn-small waves-effect waves-light red" onclick="deleteUser('<%= user.id %>')">
+            <i class="material-icons">delete</i>
+          </button>
           </td>
         </tr>
       <% }); %>
@@ -71,7 +78,7 @@
     $('#toggleTableBtn').click(function () {
       $('#userTable').slideToggle(300);
       const atual = $(this).text();
-      $(this).text(atual === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+      $(this).text(atual === "Esconder Tabela"? "Mostrar Tabela" : "Esconder Tabela");
     });
   });
 

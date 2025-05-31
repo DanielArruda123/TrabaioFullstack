@@ -18,8 +18,15 @@
   <label for="status">Status</label>
   <input required name="status" id="status" type="text"><br>
 
-  <button type="submit">Enviar</button>
-  <button type="reset">Cancelar</button>
+  <button class="btn waves-effect waves-light" type="submit" name="action">Enviar
+    <i class="material-icons right">send</i>
+  </button>
+  <button class="btn waves-effect waves-light" type="reset" name="action">Limpar
+    <i class="material-icons right">delete_sweep</i>
+  </button>
+  <button id="toggleTableBtn" class="btn waves-effect waves-light" type="reset" name="action">Mostrar Tabela
+    <i class="material-icons right"></i>
+  </button>
 </form>
 
 <span id="error"></span>
@@ -29,7 +36,7 @@
 <% } %>
 
 <!-- Botão para mostrar/esconder tabela -->
-<button id="toggleTableBtn">Mostrar Tabela</button>
+
 
 <table id="solicitationTable" style="display: none; margin-top: 10px;">
   <thead>
@@ -51,8 +58,13 @@
           <td><%= solicitation.data_hora %></td>
           <td><%= solicitation.status %></td>
           <td>
-            <button onclick="editSolicitation('<%= solicitation.id %>')">Editar</button>
-            <button onclick="deleteSolicitation('<%= solicitation.id %>')">Excluir</button>
+            <button class="btn-small waves-effect waves-light yellow darken-2" onclick="editSolicitation('<%= solicitation.id %>')">
+              <i class="material-icons">edit</i>
+            </button>
+
+          <button class="btn-small waves-effect waves-light red" onclick="deleteSolicitation('<%= solicitation.id %>')">
+            <i class="material-icons">delete</i>
+          </button>
           </td>
         </tr>
       <% }) %>
@@ -73,7 +85,7 @@
     $('#toggleTableBtn').click(function () {
       $('#solicitationTable').slideToggle(300);
       const atual = $(this).text();
-      $(this).text(atual === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+      $(this).text(atual === "Esconder Tabela"? "Mostrar Tabela" : "Esconder Tabela");
     });
   });
 
