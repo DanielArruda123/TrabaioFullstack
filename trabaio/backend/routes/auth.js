@@ -2,11 +2,52 @@ var express = require('express');
 var router = express.Router();
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
-const db = require('../database/config'); 
+const db = require('../database/config');
 
-// Rota de login principal da API (usada pelo frontend) - SEM ALTERAÇÕES
+// As definições de 'tags' e 'components: schemas: LoginCredentials, LoginResponse, AdminLoginCredentials'
+// foram movidas para app.js
+
+/**
+ * @swagger
+ * /auth/login:
+ * post:
+ * summary: Realiza o login do usuário e retorna um token JWT.
+ * tags: [Auth]
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/LoginCredentials'
+ * responses:
+ * 200:
+ * description: Login bem-sucedido.
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/LoginResponse'
+ * 401:
+ * description: Senha incorreta.
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/ErrorResponse'
+ * 404:
+ * description: Usuário não encontrado.
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/ErrorResponse'
+ * 500:
+ * description: Erro interno do servidor.
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/ErrorResponse'
+ * security: []
+ */
 router.post('/login', (req, res) => {
-    // ... (código existente)
+    // ... (código da rota de login) ...
     const {username, password} = req.body;
     db.get('SELECT * FROM users WHERE username = ?', username, (err, row) => {
         if (err) { 
@@ -36,22 +77,55 @@ router.post('/login', (req, res) => {
     })
 });
 
-
-// === ROTAS PARA PAINEL ADM NO BACKEND (URLS MODIFICADAS) ===
-
-// GET - Exibe o formulário de login de ADM
-// AGORA ACESSÍVEL EM /auth/admin
+// /**
+//  * @swagger
+//  * /auth/admin:
+//  * get:
+//  * summary: Exibe o formulário de login do painel administrativo (página HTML).
+//  * tags: [Auth]
+//  * responses:
+//  * 200:
+//  * description: Formulário de login ADM.
+//  * content:
+//  * text/html:
+//  * schema:
+//  * type: string
+//  * 302:
+//  * description: Redireciona para /auth/admin/api-links se já estiver logado na sessão do painel.
+//  * security: []
+//  */
 router.get('/admin', (req, res) => { 
-    // Se já estiver logado no painel ADM (tem token na sessão do backend), redireciona para os links
+    // ... (código da rota) ...
     if (req.session.adminAccessToken) {
         return res.redirect('/auth/admin/api-links');
     }
     res.render('admin-login-form', { error: null, title: 'Login ADM Backend' });
 });
 
-// POST - Processa o formulário de login de ADM
-// O <form action> no admin-login-form.ejs precisará apontar para /auth/admin
+// /**
+//  * @swagger
+//  * /auth/admin:
+//  * post:
+//  * summary: Processa o login do painel administrativo (via formulário HTML).
+//  * tags: [Auth]
+//  * requestBody:
+//  * required: true
+//  * content:
+//  * application/x-www-form-urlencoded:
+//  * schema:
+//  * $ref: '#/components/schemas/AdminLoginCredentials'
+//  * responses:
+//  * 302:
+//  * description: Redireciona para /auth/admin/api-links em caso de sucesso, ou de volta para /auth/admin com erro.
+//  * headers:
+//  * Location:
+//  * description: URL para redirecionamento.
+//  * schema:
+//  * type: string
+//  * security: []
+//  */
 router.post('/admin', (req, res) => { 
+    // ... (código da rota) ...
     const { username, password } = req.body;
 
     if (!username || !password) {
@@ -87,27 +161,58 @@ router.post('/admin', (req, res) => {
             );
             
             req.session.adminAccessToken = token; 
-            res.redirect('/auth/admin/api-links'); // Redireciona para a página de links
+            res.redirect('/auth/admin/api-links');
         });
     });
 });
 
-// GET - Página de links da API para ADM
-// AGORA ACESSÍVEL EM /auth/admin/api-links
+// /**
+//  * @swagger
+//  * /auth/admin/api-links:
+//  * get:
+//  * summary: Exibe a página de links da API para administradores logados (página HTML).
+//  * tags: [Auth]
+//  * responses:
+//  * 200:
+//  * description: Página de links da API.
+//  * content:
+//  * text/html:
+//  * schema:
+//  * type: string
+//  * 302:
+//  * description: Redireciona para /auth/admin se não estiver logado na sessão do painel.
+//  * security: []
+//  */
 router.get('/admin/api-links', (req, res) => { 
+    // ... (código da rota) ...
     if (!req.session.adminAccessToken) {
-        return res.redirect('/auth/admin'); // Redireciona para o login do painel se não tiver token na sessão
+        return res.redirect('/auth/admin');
     }
     res.render('admin-api-links', { title: 'Painel ADM - Links da API' });
 });
 
-// Rota de Logout para o painel ADM do backend
-// AGORA ACESSÍVEL EM /auth/admin/logout
+// /**
+//  * @swagger
+//  * /auth/admin/logout:
+//  * get:
+//  * summary: Realiza o logout do painel administrativo e redireciona para o login do painel.
+//  * tags: [Auth]
+//  * responses:
+//  * 302:
+//  * description: Redireciona para /auth/admin.
+//  * headers:
+//  * Location:
+//  * description: URL para redirecionamento.
+//  * schema:
+//  * type: string
+//  * security: []
+//  */
 router.get('/admin/logout', (req, res) => { 
+    // ... (código da rota) ...
     if (req.session.adminAccessToken) {
         delete req.session.adminAccessToken; 
     }
-    res.redirect('/auth/admin'); // Redireciona para o login do painel
+    res.redirect('/auth/admin');
 });
 
 module.exports = router;

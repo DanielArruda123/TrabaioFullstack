@@ -141,6 +141,18 @@
             }
         });
     </script>
+    <script src="https://unpkg.com/imask"></script>
+<script>
+  const phoneInput = document.getElementById('reg_phone');
+  const maskOptions = {
+    mask: '(00)00000-0000',
+    lazy: false,
+    placeholderChar: '_',
+    showMask: true,
+  };
+const phoneMask = IMask(phoneInput, maskOptions);
+
+</script>
 
 </body>
 </html>

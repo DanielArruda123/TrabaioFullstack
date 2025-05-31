@@ -7,26 +7,26 @@
 
       <%# Links visíveis se o usuário estiver logado %>
       <% if (locals.currentUserRole) { %>
-        <li><a href="/userproducts"><i class="material-icons left">shopping_bag</i>Produtos</a></li>
-        <li><a href="/userservices"><i class="material-icons left">content_cut</i>Serviços</a></li>
-        <li>
+        <!-- <li><a href="/userproducts"><i class="material-icons left">shopping_bag</i>Produtos</a></li>
+        <li><a href="/userservices"><i class="material-icons left">content_cut</i>Serviços</a></li> -->
+        <!-- <li>
           <a href="/userservices/cart"><i class="material-icons left">shopping_cart</i>Carrinho<span id="cart-badge" class="new badge white black-text" data-badge-caption="" style="display: none; margin-left: 5px;"></span></a>
-        </li>
+        </li> -->
 
         <%# Links de ADM %>
         <% if (currentUserRole === 'ADM') { %>
-          <li><a href="/pets"><i class="material-icons left">pets</i>Pets (Admin)</a></li>
-          <li><a href="/products"><i class="material-icons left">store</i>Produtos (Admin)</a></li>
-          <li><a href="/services"><i class="material-icons left">room_service</i>Serviços (Admin)</a></li>
-          <li><a href="/users"><i class="material-icons left">people</i>Usuários (Admin)</a></li>
-          <li><a href="/tutors"><i class="material-icons left">assignment_ind</i>Tutores (Admin)</a></li>
-          <li><a href="/solicitations"><i class="material-icons left">playlist_add_check</i>Solicitações (Admin)</a></li>
+          <li><a href="/pets"><i class="material-icons left">pets</i>Pets</a></li>
+          <li><a href="/products"><i class="material-icons left">store</i>Produtos</a></li>
+          <li><a href="/services"><i class="material-icons left">room_service</i>Serviços</a></li>
+          <li><a href="/users"><i class="material-icons left">people</i>Usuários</a></li>
+          <li><a href="/tutors"><i class="material-icons left">assignment_ind</i>Tutores</a></li>
+          <li><a href="/solicitations"><i class="material-icons left">playlist_add_check</i>Solicitações</a></li>
         <% } %>
         <li><a href="/login/logout"><i class="material-icons left">exit_to_app</i>Sair</a></li>
       <% } else { %>
         <%# Links para usuários não logados %>
-        <li><a href="/userproducts"><i class="material-icons left">shopping_bag</i>Produtos</a></li>
-        <li><a href="/userservices"><i class="material-icons left">content_cut</i>Serviços</a></li>
+        <!-- <li><a href="/userproducts"><i class="material-icons left">shopping_bag</i>Produtos</a></li>
+        <li><a href="/userservices"><i class="material-icons left">content_cut</i>Serviços</a></li> -->
         <li><a href="/login"><i class="material-icons left">login</i>Login</a></li>
       <% } %>
     </ul>
@@ -50,29 +50,29 @@
       <li><a href="/"><i class="material-icons left">home</i>Home</a></li>
       
       <% if (locals.currentUserRole) { %>
-        <li><a href="/userproducts"><i class="material-icons left">shopping_bag</i>Ver Produtos</a></li>
-        <li><a href="/userservices"><i class="material-icons left">content_cut</i>Ver Serviços</a></li>
-        <li>
+        <!-- <li><a href="/userproducts"><i class="material-icons left">shopping_bag</i>Ver Produtos</a></li>
+        <li><a href="/userservices"><i class="material-icons left">content_cut</i>Ver Serviços</a></li> -->
+        <!-- <li>
           <a href="/userservices/cart">
             <i class="material-icons left">shopping_cart</i>Carrinho
             <span id="cart-badge-mobile" class="new badge orange white-text" data-badge-caption="" style="display: none; margin-left: 5px;"></span>
           </a>
-        </li>
+        </li> -->
         <% if (currentUserRole === 'ADM') { %>
           <li><div class="divider"></div></li>
           <li><a class="subheader">Painel Administrativo</a></li>
-          <li><a href="/pets"><i class="material-icons left">pets</i>Pets (Admin)</a></li>
-          <li><a href="/products"><i class="material-icons left">store</i>Produtos (Admin)</a></li>
-          <li><a href="/services"><i class="material-icons left">room_service</i>Serviços (Admin)</a></li>
-          <li><a href="/users"><i class="material-icons left">people</i>Usuários (Admin)</a></li>
-          <li><a href="/tutors"><i class="material-icons left">assignment_ind</i>Tutores (Admin)</a></li>
-          <li><a href="/solicitations"><i class="material-icons left">playlist_add_check</i>Solicitações (Admin)</a></li>
+          <li><a href="/pets"><i class="material-icons left">pets</i>Pets</a></li>
+          <li><a href="/products"><i class="material-icons left">store</i>Produtos</a></li>
+          <li><a href="/services"><i class="material-icons left">room_service</i>Serviços</a></li>
+          <li><a href="/users"><i class="material-icons left">people</i>Usuários</a></li>
+          <li><a href="/tutors"><i class="material-icons left">assignment_ind</i>Tutores</a></li>
+          <li><a href="/solicitations"><i class="material-icons left">playlist_add_check</i>Solicitações</a></li>
         <% } %>
         <li><div class="divider"></div></li>
         <li><a href="/login/logout"><i class="material-icons left">exit_to_app</i>Sair</a></li>
       <% } else { %>
-        <li><a href="/userproducts"><i class="material-icons left">shopping_bag</i>Ver Produtos</a></li>
-        <li><a href="/userservices"><i class="material-icons left">content_cut</i>Ver Serviços</a></li>
+        <!-- <li><a href="/userproducts"><i class="material-icons left">shopping_bag</i>Ver Produtos</a></li>
+        <li><a href="/userservices"><i class="material-icons left">content_cut</i>Ver Serviços</a></li> -->
         <li><a href="/login"><i class="material-icons left">login</i>Login / Registrar</a></li>
       <% } %>
     </ul>
