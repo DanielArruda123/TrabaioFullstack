@@ -3,46 +3,78 @@
 <form id="tutorForm">
   <input type="hidden" name="id" id="id">
 
-  <label>Nome</label>
-  <input required name="nome" id="nome" type="text"><br>
+  <div class="row">
+    <div class="input-field col s12 m6">
+      <input required name="nome" id="nome" type="text">
+      <label for="nome">Nome</label>
+    </div>
+    <div class="input-field col s12 m6">
+      <input required name="contato" id="contato" type="text">
+      <label for="contato">Contato</label>
+    </div>
+  </div>
 
-  <label>Contato</label>
-  <input required name="contato" id="contato" type="text"><br>
+  <div class="row">
+    <div class="input-field col s12">
+      <input required name="endereco" id="endereco" type="text">
+      <label for="endereco">Endereço</label>
+    </div>
+  </div>
 
-  <label>Endereço</label>
-  <input required name="endereco" id="endereco" type="text"><br>
+  <div class="row">
+    <div class="input-field col s12">
+      <select multiple id="pets_associados_select" name="pets_associados">
+        <option value="" disabled>Selecione os Pets Associados</option>
+        <%# Esta seção popula as opções iniciais do select. %>
+        <%# A variável 'pets' deve ser passada pela sua rota GET /tutors no Express. %>
+        <% if (typeof pets !== 'undefined' && pets.length > 0) { %>
+          <% pets.forEach(function(pet_item) { %>
+            <%
+              const petNameForOption = pet_item.name ? pet_item.name.toLowerCase().replace(/"/g, "&quot;").replace(/'/g, "\\'") : '';
+              const petRaceForOption = typeof pet_item.race === 'string' ? pet_item.race.toLowerCase().replace(/"/g, "&quot;").replace(/'/g, "\\'") : '';
+              const displayTextForOption = (pet_item.name ? pet_item.name.replace(/'/g, "\\'").replace(/"/g, "&quot;") : '') + 
+                                  (pet_item.race ? ' (' + pet_item.race.replace(/'/g, "\\'").replace(/"/g, "&quot;") + ')' : ' (Sem raça)');
+            %>
+            <option value="<%= pet_item.id %>"
+                    data-name="<%= petNameForOption %>"
+                    data-race="<%= petRaceForOption %>">
+              <%- displayTextForOption %>
+            </option>
+          <% }); %>
+        <% } else { %>
+          <option value="" disabled>Nenhum pet cadastrado ou disponível</option>
+        <% } %>
+      </select>
+      <label for="pets_associados_select">Pets Associados</label>
+    </div>
+  </div>
 
-  <label>Pets Associados</label>
-  <input name="pets_associados" id="pets_associados" type="text"><br>
-
-  <button class="btn waves-effect waves-light" type="submit" name="action">Enviar
+  <button style="background-color:#F57C00;" class="btn waves-effect waves-light" type="submit" name="action">Enviar
     <i class="material-icons right">send</i>
   </button>
-  <button class="btn waves-effect waves-light" type="reset" name="action">Limpar
+  <button style="background-color:#F57C00;" class="btn waves-effect waves-light" type="reset" name="action" onclick="resetFormAndSearch()">Limpar
     <i class="material-icons right">delete_sweep</i>
   </button>
-  <button id="toggleTableBtn" class="btn waves-effect waves-light" type="reset" name="action">Mostrar Tabela
-    <i class="material-icons right"></i>
+  <button style="background-color:#F57C00;" id="toggleTableBtn" class="btn waves-effect waves-light" type="button">Mostrar Tabela
+    <i class="material-icons right">table_rows</i>
   </button>
 </form>
 
-<span id="error"></span>
+<span id="error" class="red-text"></span>
 
-<!-- Botão para mostrar/esconder tabela -->
-
-<table id="tutorTable" style="display: none; margin-top: 10px;">
+<table id="tutorTable" style="display: none; margin-top: 20px;">
   <thead>
     <tr>
       <th>ID</th>
       <th>Nome</th>
       <th>Contato</th>
       <th>Endereço</th>
-      <th>Pets Associados</th>
+      <th>Pets Associados (IDs)</th>
       <th>Ações</th>
     </tr>
   </thead>
   <tbody>
-    <% if (tutors && tutors.length > 0) { %>
+    <% if (typeof tutors !== 'undefined' && tutors.length > 0) { %>
       <% tutors.forEach(tutor => { %>
         <tr>
           <td><%= tutor.id %></td>
@@ -51,13 +83,14 @@
           <td><%= tutor.endereco %></td>
           <td><%= tutor.pets_associados %></td>
           <td>
-<button class="btn-small waves-effect waves-light yellow darken-2" onclick="editTutor('<%= tutor.id %>')">
-            <i class="material-icons">edit</i>
-          </button>
-
-          <button class="btn-small waves-effect waves-light red" onclick="deleteTutor('<%= tutor.id %>')">
-            <i class="material-icons">delete</i>
-          </button>
+            <button class="btn-small waves-effect waves-light yellow darken-2" 
+                    onclick="editTutor('<%= tutor.id %>')">
+              <i class="material-icons">edit</i>
+            </button>
+            <button class="btn-small waves-effect waves-light red" 
+                    onclick="deleteTutor('<%= tutor.id %>', '<%- tutor.nome ? tutor.nome.replace(/'/g, "\\'").replace(/"/g, "&quot;") : `ID ${tutor.id}` %>')">
+              <i class="material-icons">delete</i>
+            </button>
           </td>
         </tr>
       <% }) %>
@@ -69,96 +102,360 @@
   </tbody>
 </table>
 
-<!-- jQuery CDN -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<div id="deleteConfirmModal" class="modal">
+  <div class="modal-content">
+    <h4>Confirmar Exclusão</h4>
+    <p>Tem certeza que deseja excluir este tutor? Esta ação não pode ser desfeita.</p>
+    <p><strong>Tutor:</strong> <span id="modalTutorNameText"></span></p>
+  </div>
+  <div class="modal-footer">
+    <a href="#!" class="modal-close waves-effect waves-grey btn-flat">Cancelar</a>
+    <a href="#!" id="confirmDeleteModalBtn" class="waves-effect waves-red btn red">Excluir</a>
+  </div>
+</div>
 
+
+<script src="https://unpkg.com/imask"></script>
 <script>
-  // Botão mostrar/esconder a tabela
-  $(document).ready(function () {
+  // Array global para armazenar todas as opções de pets originais (para a busca)
+  let allPetOptionsData = [];
+  <% if (typeof pets !== 'undefined' && pets.length > 0) { %>
+    <% pets.forEach(function(pet_item) { %>
+      <%
+        const petNameJS = pet_item.name ? pet_item.name.replace(/'/g, "\\'").replace(/"/g, "&quot;") : '';
+        const petRaceJS = typeof pet_item.race === 'string' ? pet_item.race.replace(/'/g, "\\'").replace(/"/g, "&quot;") : '';
+        const displayTextJS = petNameJS + (petRaceJS ? ' (' + petRaceJS + ')' : ' (Sem raça)');
+      %>
+      allPetOptionsData.push({
+        id: String("<%= pet_item.id %>"),
+        name: <%- JSON.stringify(petNameJS) %>,
+        race: <%- JSON.stringify(petRaceJS) %>,
+        displayText: <%- JSON.stringify(displayTextJS) %>
+      });
+    <% }); %>
+  <% } %>
+
+  let phoneMask; // Variável para a instância do IMask
+  let materializePetsSelectInstance;
+  let petSearchInputInDropdownEl;
+  let tutorIdToDelete = null;
+  let deleteConfirmModalInstance;
+
+  function filterPetOptionsInTutorsDropdown() {
+    if (!materializePetsSelectInstance || !materializePetsSelectInstance.dropdownEl || !petSearchInputInDropdownEl) {
+      return;
+    }
+    const searchTerm = petSearchInputInDropdownEl.value.toLowerCase().trim();
+    const optionLis = materializePetsSelectInstance.dropdownEl.querySelectorAll('li:not(.custom-search-li-tutors):not(.disabled):not(.optgroup)');
+
+    optionLis.forEach(li => {
+      const labelSpan = li.querySelector('label > span') || li.querySelector('span');
+      const textContent = labelSpan ? labelSpan.textContent.toLowerCase() : '';
+      li.style.display = textContent.includes(searchTerm) ? '' : 'none';
+    });
+  }
+
+  function setUpPetSearchFeatureForTutors(selectInstance) {
+    if (!selectInstance || !selectInstance.dropdownEl) {
+      return;
+    }
+    const dropdownContentUl = selectInstance.dropdownEl;
+    let existingSearchLi = dropdownContentUl.querySelector('.custom-search-li-tutors');
+    if (existingSearchLi) {
+      existingSearchLi.remove();
+    }
+
+    const searchLi = document.createElement('li');
+    searchLi.className = 'custom-search-li-tutors';
+    searchLi.style.padding = '8px 16px';
+    searchLi.style.borderBottom = '1px solid #eee';
+    searchLi.style.position = 'sticky';
+    searchLi.style.top = '0';
+    searchLi.style.backgroundColor = 'white';
+    searchLi.style.zIndex = '10';
+
+    petSearchInputInDropdownEl = document.createElement('input');
+    petSearchInputInDropdownEl.type = 'text';
+    petSearchInputInDropdownEl.placeholder = 'Buscar pet por nome ou raça...';
+    petSearchInputInDropdownEl.style.width = '100%';
+    petSearchInputInDropdownEl.style.boxSizing = 'border-box';
+    petSearchInputInDropdownEl.style.border = '1px solid #ddd';
+    petSearchInputInDropdownEl.style.borderRadius = '3px';
+    petSearchInputInDropdownEl.style.padding = '6px 8px';
+    petSearchInputInDropdownEl.style.margin = '0';
+
+    petSearchInputInDropdownEl.addEventListener('click', (e) => e.stopPropagation());
+    petSearchInputInDropdownEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') e.preventDefault();
+      e.stopPropagation();
+    });
+    petSearchInputInDropdownEl.addEventListener('keyup', filterPetOptionsInTutorsDropdown);
+
+    searchLi.appendChild(petSearchInputInDropdownEl);
+    dropdownContentUl.insertBefore(searchLi, dropdownContentUl.firstChild);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var selectElems = document.querySelectorAll('select');
+    M.FormSelect.init(selectElems);
+    
+    var modalElem = document.getElementById('deleteConfirmModal');
+    if (modalElem) {
+        const instances = M.Modal.init(modalElem);
+        deleteConfirmModalInstance = instances[0]; 
+    }
+    
+    const petsSelectHTMLEl = document.getElementById('pets_associados_select');
+    if (petsSelectHTMLEl) {
+        materializePetsSelectInstance = M.FormSelect.getInstance(petsSelectHTMLEl);
+        if (materializePetsSelectInstance) {
+             setUpPetSearchFeatureForTutors(materializePetsSelectInstance);
+        }
+    }
+
     $('#toggleTableBtn').click(function () {
       $('#tutorTable').slideToggle(300);
-      const atual = $(this).text();
-      $(this).text(atual === "Esconder Tabela"? "Mostrar Tabela" : "Esconder Tabela");
+      const buttonTextNode = $(this).contents().filter(function() { return this.nodeType === 3; }).first();
+      const currentText = buttonTextNode.text().trim();
+      buttonTextNode.replaceWith(currentText === "Esconder Tabela" ? "Mostrar Tabela " : "Esconder Tabela ");
     });
+
+    // ========================================================
+    // INICIALIZAÇÃO DO IMASK PARA O CAMPO DE CONTATO
+    // ========================================================
+    const contatoInput = document.getElementById('contato');
+    if (contatoInput) {
+        const maskOptions = { mask: '(00)00000-0000', lazy: false, placeholderChar: '_' };
+        phoneMask = IMask(contatoInput, maskOptions); // 'phoneMask' é a variável global
+    }
+    // ========================================================
+
+    const confirmDeleteModalBtn = document.getElementById('confirmDeleteModalBtn');
+    if (confirmDeleteModalBtn) {
+      confirmDeleteModalBtn.addEventListener('click', function() {
+        if (tutorIdToDelete) {
+          fetch("/tutors/" + tutorIdToDelete, {
+            method: "DELETE"
+          })
+          .then(async (res) => await checkERROR(res))
+          .then(() => {
+            window.location.reload();
+          })
+          .catch((error) => {
+            errorSpan.innerText = 'Erro ao deletar tutor: ' + (error.message || JSON.stringify(error));
+          })
+          .finally(() => {
+            if (deleteConfirmModalInstance) {
+              deleteConfirmModalInstance.close();
+            }
+            tutorIdToDelete = null;
+          });
+        }
+      });
+    }
   });
 
   const form = document.getElementById('tutorForm');
+  const errorSpan = document.getElementById('error');
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    const tutor = mountDataForm();
+    const tutorData = mountDataForm();
     const id = document.getElementById("id").value;
     const METHOD = id ? 'PUT' : 'POST';
     const URL = id ? `/tutors/${id}` : '/tutors';
-    createOrUpdate(tutor, URL, METHOD);
+    createOrUpdate(tutorData, URL, METHOD);
   });
+
+  function mountDataForm() {
+    const formData = new FormData(form);
+    const tutor = {};
+    for (let [key, value] of formData.entries()) {
+      if (key === 'pets_associados') {
+        tutor[key] = formData.getAll(key); 
+      } else {
+        tutor[key] = value;
+      }
+    }
+    if (!tutor.pets_associados) {
+        tutor.pets_associados = [];
+    }
+    return tutor;
+  }
 
   function createOrUpdate(tutor, URL, METHOD) {
     fetch(URL, {
       method: METHOD,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(tutor)
+      body: JSON.stringify(tutor) 
     })
     .then(async (res) => await checkERROR(res))
-    .then(() => {
-      form.reset();
+    .then((data) => {
+      resetFormAndSearch(); 
       window.location.reload();
     })
     .catch((error) => {
-      document.getElementById('error').innerText = error.message || "Erro ao salvar";
+      errorSpan.innerText = error.message || "Erro ao salvar tutor.";
     });
   }
 
   function editTutor(id) {
     fetch("/tutors/" + id, { method: "GET" })
     .then(async (res) => await checkERROR(res))
-    .then((tutor) => {
-      for (let prop in tutor) {
-        const input = document.querySelector(`input[name="${prop}"]`);
-        if (input) input.value = tutor[prop];
+    .then((data) => {
+      const tutor = data.tutor;
+      if (data.pets && Array.isArray(data.pets)) {
+        allPetOptionsData = data.pets.map(pet_item => ({
+            id: String(pet_item.id),
+            name: pet_item.name ? pet_item.name.replace(/'/g, "\\'").replace(/"/g, "&quot;") : '',
+            race: typeof pet_item.race === 'string' ? pet_item.race.replace(/'/g, "\\'").replace(/"/g, "&quot;") : '',
+            displayText: (pet_item.name ? pet_item.name.replace(/'/g, "\\'").replace(/"/g, "&quot;") : '') + 
+                         (pet_item.race ? ' (' + pet_item.race.replace(/'/g, "\\'").replace(/"/g, "&quot;") + ')' : ' (Sem raça)')
+        }));
       }
+
+      form.reset(); 
+      document.getElementById('id').value = tutor.id || '';
+      document.getElementById('nome').value = tutor.nome || '';
+      document.getElementById('contato').value = tutor.contato || '';
+      // ========================================================
+      // ATUALIZA O VALOR DA MÁSCARA APÓS POPULAR O CAMPO CONTATO
+      // ========================================================
+      if (phoneMask) {
+          phoneMask.value = tutor.contato || ''; // Define o valor bruto
+          // phoneMask.updateValue(); // Opcional: IMask geralmente atualiza ao setar .value
+      }
+      // ========================================================
+      document.getElementById('endereco').value = tutor.endereco || '';
+      
+      const selectElem = document.getElementById('pets_associados_select');
+      
+      if (petSearchInputInDropdownEl) {
+        petSearchInputInDropdownEl.value = ''; 
+      }
+
+      selectElem.innerHTML = '<option value="" disabled>Selecione os Pets Associados</option>';
+      allPetOptionsData.forEach(pet => {
+        const option = document.createElement('option');
+        option.value = pet.id;
+        option.textContent = pet.displayText;
+        option.setAttribute('data-name', pet.name.toLowerCase());
+        option.setAttribute('data-race', pet.race ? pet.race.toLowerCase() : '');
+        selectElem.appendChild(option);
+      });
+      
+      let selectedPetIds = [];
+      if (tutor.pets_associados && typeof tutor.pets_associados === 'string' && tutor.pets_associados.length > 0) {
+        selectedPetIds = tutor.pets_associados.split(',').map(petId => String(petId.trim()));
+      }
+      
+      for (let i = 0; i < selectElem.options.length; i++) {
+        const option = selectElem.options[i];
+        if (option.value && selectedPetIds.includes(option.value)) {
+          option.selected = true;
+        } else {
+          option.selected = false;
+        }
+      }
+      
+      if (materializePetsSelectInstance) {
+        materializePetsSelectInstance.destroy();
+      }
+      M.FormSelect.init(selectElem);
+      materializePetsSelectInstance = M.FormSelect.getInstance(selectElem);
+      if (materializePetsSelectInstance) { 
+          setUpPetSearchFeatureForTutors(materializePetsSelectInstance); 
+      }
+      
+      filterPetOptionsInTutorsDropdown(); 
+      
+      M.updateTextFields(); 
+      document.getElementById('nome').focus();
+      errorSpan.innerText = '';
     })
     .catch((error) => {
-      document.getElementById('error').innerText = error.message || error;
+      errorSpan.innerText = 'Erro ao carregar dados do tutor para edição: ' + (error.message || error);
     });
   }
 
-  function deleteTutor(id) {
-    fetch("/tutors/" + id, { method: "DELETE" })
-    .then(async (res) => await checkERROR(res))
-    .then(() => {
-      window.location.reload();
-    })
-    .catch((error) => {
-      document.getElementById('error').innerText = JSON.stringify(error);
-    });
+  function resetFormAndSearch() {
+    form.reset();
+    document.getElementById('id').value = '';
+    
+    const selectElem = document.getElementById('pets_associados_select');
+        
+    if (petSearchInputInDropdownEl) { 
+      petSearchInputInDropdownEl.value = '';
+    }
+
+    if (selectElem) {
+      selectElem.innerHTML = '<option value="" disabled selected>Selecione os Pets Associados</option>';
+      allPetOptionsData.forEach(pet => {
+          const option = document.createElement('option');
+          option.value = pet.id;
+          option.textContent = pet.displayText;
+          option.setAttribute('data-name', pet.name.toLowerCase());
+          option.setAttribute('data-race', pet.race ? pet.race.toLowerCase() : '');
+          selectElem.appendChild(option);
+      });
+      if (materializePetsSelectInstance) {
+          materializePetsSelectInstance.destroy();
+      }
+      M.FormSelect.init(selectElem);
+      materializePetsSelectInstance = M.FormSelect.getInstance(selectElem);
+      if (materializePetsSelectInstance) {
+        setUpPetSearchFeatureForTutors(materializePetsSelectInstance);
+      }
+      filterPetOptionsInTutorsDropdown();
+    }
+    
+    M.updateTextFields();
+    errorSpan.innerText = '';
+    // ========================================================
+    // ATUALIZA/LIMPA O VALOR DA MÁSCARA AO RESETAR O FORMULÁRIO
+    // ========================================================
+    if (phoneMask) {
+        phoneMask.value = ''; // Limpa o valor bruto da máscara
+        // phoneMask.updateValue(); // Opcional
+    }
+    // ========================================================
   }
 
+  function deleteTutor(id, tutorName) { // Mudado aqui também
+    tutorIdToDelete = id;
+    const modalTutorNameTextEl = document.getElementById('modalTutorNameText');
+    if (modalTutorNameTextEl) {
+      modalTutorNameTextEl.textContent = tutorName || `ID: ${id}`;
+    }
+    if (deleteConfirmModalInstance) {
+      deleteConfirmModalInstance.open();
+    } else {
+      console.warn("Modal de confirmação não inicializado. Usando confirm padrão.");
+      if (confirm(`Tem certeza que deseja deletar o tutor ${tutorName || 'ID: ' + id}?`)) {
+         fetch("/tutors/" + id, { method: "DELETE" })
+          .then(async (res) => await checkERROR(res))
+          .then(() => { window.location.reload(); })
+          .catch((err) => { errorSpan.innerText = 'Erro ao deletar tutor: ' + (err.message || JSON.stringify(err)); });
+      }
+    }
+  }
+  
   async function checkERROR(res) {
     if (!res.ok) {
-      let err = { message: 'Erro desconhecido' };
-      try { err = await res.json(); } catch (e) {}
+      let err = { message: `Erro ${res.status}: ${res.statusText}` };
+      try { 
+        const errorBody = await res.json();
+        err.message = errorBody.error || errorBody.message || err.message;
+      } catch (e) { /* Ignora se o corpo não for JSON */ }
       throw err;
     }
-    return res.json();
+    const contentType = res.headers.get("content-type");
+    if (res.status === 204 || res.status === 200 && (!contentType || contentType.indexOf("application/json") === -1) ) {
+        return { success: true, message: "Operação realizada com sucesso." };
+    }
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+        return res.json();
+    }
+    return { success: true, message: "Operação realizada com sucesso (resposta não JSON)." };
   }
-
-  function mountDataForm() {
-    const formData = new FormData(form);
-    const tutor = {};
-    formData.forEach((v, k) => { tutor[k] = v; });
-    return tutor;
-  }
-</script>
-<script src="https://unpkg.com/imask"></script>
-<script>
-  const contatoInput = document.getElementById('contato');
-  const maskOptions = {
-    mask: '(00)00000-0000',
-    lazy: false,
-    placeholderChar: '_',
-    showMask: true,
-  };
-const phoneMask = IMask(contatoInput, maskOptions);
-
 </script>

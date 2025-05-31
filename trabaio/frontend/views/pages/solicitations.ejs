@@ -1,204 +1,753 @@
 <h1><%= title %></h1>
 
-<form id="solicitationForm" action="">
-  <input required type="hidden" name="id" id="id">
+<form id="solicitationForm">
+  <input type="hidden" name="id" id="solicitation_id_hidden">
 
-  <label for="tutor">Tutor</label>
-  <input required name="tutor" id="tutor" type="text"><br>
+  <div class="row">
+    <div class="input-field col s12 m6">
+      <select id="solicitation_tutor_select" name="tutor_id" required>
+        <option value="" disabled selected>Selecione um Tutor</option>
+        <% if (typeof tutors !== 'undefined' && tutors.length > 0) { %>
+          <% tutors.forEach(function(tutor) { %>
+            <option value="<%= tutor.id %>"><%- tutor.nome %></option>
+          <% }); %>
+        <% } else { %>
+          <option value="" disabled>Nenhum tutor encontrado</option>
+        <% } %>
+      </select>
+      <label for="solicitation_tutor_select">Tutor Responsável</label>
+    </div>
 
-  <label for="pet">Pet</label>
-  <input required name="pet" id="pet" type="text"><br>
+    <div class="input-field col s12 m6">
+      <select multiple id="solicitation_pet_select" name="pets_solicitacao" required>
+        <option value="" disabled>Selecione um tutor para ver os pets</option>
+        </select>
+      <label for="solicitation_pet_select">Pet(s) para o Serviço</label>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="input-field col s12 m6">
+      <select multiple id="solicitation_service_select" name="servicos_selecionados" required>
+        <option value="" disabled>Selecione o(s) Serviço(s)</option>
+        <% if (typeof services !== 'undefined' && services.length > 0) { %>
+          <% services.forEach(function(service) { %>
+            <% 
+              let priceDisplayText = "N/A"; 
+              if (service && typeof service.preco === 'number' && !isNaN(service.preco)) {
+                  priceDisplayText = `R$ ${service.preco.toFixed(2)}`;
+              } else if (service && service.preco !== null && typeof service.preco !== 'undefined') { 
+                  const priceAsNumber = Number(String(service.preco).replace(',', '.'));
+                  if (!isNaN(priceAsNumber)) {
+                      priceDisplayText = `R$ ${priceAsNumber.toFixed(2)}`;
+                  } else {
+                      priceDisplayText = `R$ ${String(service.preco || '').replace(/'/g, "\\'").replace(/"/g, "&quot;")}`; 
+                  }
+              }
+              const serviceNameForOption = service.nome ? service.nome.toLowerCase().replace(/"/g, "&quot;").replace(/'/g, "\\'") : '';
+              const serviceDisplayTextForOption = (service.nome ? service.nome.replace(/'/g, "\\'").replace(/"/g, "&quot;") : '') + ' - ' + priceDisplayText.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+            %>
+            <option value="<%= service.id %>" data-name="<%- serviceNameForOption %>" data-displaytext="<%- serviceDisplayTextForOption %>">
+              <%- service.nome %> - <%- priceDisplayText %>
+            </option>
+          <% }); %>
+        <% } else { %>
+            <option value="" disabled>Nenhum serviço encontrado</option>
+        <% } %>
+      </select>
+      <label for="solicitation_service_select">Serviço(s) Desejado(s)</label>
+    </div>
+    <div class="input-field col s12 m6">
+      <input type="text" id="solicitation_data_hora" name="data_hora" placeholder="dd/mm/aaaa HH:MM" required>
+      <label for="solicitation_data_hora">Data e Hora</label>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="input-field col s12">
+        <select id="solicitation_status_select" name="status" required>
+            <option value="" disabled selected>Status da Solicitação</option>
+            <option value="AGENDADO">Agendado</option>
+            <option value="EM_ANDAMENTO">Em Andamento</option>
+            <option value="CONCLUIDO">Concluído</option>
+            <option value="CANCELADO">Cancelado</option>
+        </select>
+        <label for="solicitation_status_select">Status</label>
+    </div>
+  </div>
 
-  <label for="servico">Serviço</label>
-  <input required name="servico" id="servico" type="text"><br>
-
-  <label for="data_hora">Data/Hora</label>
-  <input required name="data_hora" id="data_hora" type="text"><br>
-
-  <label for="status">Status</label>
-  <input required name="status" id="status" type="text"><br>
-
-  <button class="btn waves-effect waves-light" type="submit" name="action">Enviar
+  <button style="background-color:#F57C00;" id="submitSolicitationBtn" class="btn waves-effect waves-light" type="button" name="action">Enviar Solicitação
     <i class="material-icons right">send</i>
-  </button>
-  <button class="btn waves-effect waves-light" type="reset" name="action">Limpar
+</button>
+  <button style="background-color:#F57C00;" class="btn waves-effect waves-light" type="reset" name="action" onclick="resetSolicitationForm()">Limpar Campos
     <i class="material-icons right">delete_sweep</i>
   </button>
-  <button id="toggleTableBtn" class="btn waves-effect waves-light" type="reset" name="action">Mostrar Tabela
-    <i class="material-icons right"></i>
+  <button style="background-color:#F57C00;" id="toggleSolicitationTableBtn" class="btn waves-effect waves-light" type="button">Mostrar Tabela de Solicitações
+    <i class="material-icons right">table_rows</i>
   </button>
 </form>
 
-<span id="error"></span>
-
-<% if (error) { %>
-  <span><%= JSON.stringify(error) %></span>
+<span id="solicitationError" class="red-text"></span>
+<% if (typeof error !== 'undefined' && error && String(error).trim() !== '') { %>
+  <p class="red-text"><%- typeof error === 'string' ? error : JSON.stringify(error) %></p>
 <% } %>
 
-<!-- Botão para mostrar/esconder tabela -->
-
-
-<table id="solicitationTable" style="display: none; margin-top: 10px;">
+<table id="solicitationTable" style="display: none; margin-top: 20px;">
   <thead>
     <tr>
       <th>ID</th>
-    <% for (let col of cols) { %>
-      <th><%= col %></th>
-    <% } %>
+      <% if (typeof cols !== 'undefined' && Array.isArray(cols)) { %>
+          <% cols.forEach(function(colName) { %>
+            <th><%- colName %></th>
+          <% }); %>
+      <% } %>
+      <th>Ações</th>
     </tr>
   </thead>
   <tbody>
-    <% if (solicitations && solicitations.length > 0) { %>
+    <% if (typeof solicitations !== 'undefined' && solicitations.length > 0) { %>
       <% solicitations.forEach(solicitation => { %>
         <tr>
           <td><%= solicitation.id %></td>
-          <td><%= solicitation.tutor %></td>
-          <td><%= solicitation.pet %></td>
-          <td><%= solicitation.servico %></td>
-          <td><%= solicitation.data_hora %></td>
-          <td><%= solicitation.status %></td>
+          <td><%- solicitation.tutor_nome || solicitation.tutor %></td>
+          <td><%- solicitation.pet_nomes || solicitation.pet %></td>
+          <td><%- solicitation.servico_nomes || solicitation.servico %></td>
+          <td><%= solicitation.data_hora ? new Date(solicitation.data_hora).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A' %></td>
+          <td><%- solicitation.status %></td>
           <td>
             <button class="btn-small waves-effect waves-light yellow darken-2" onclick="editSolicitation('<%= solicitation.id %>')">
               <i class="material-icons">edit</i>
             </button>
-
-          <button class="btn-small waves-effect waves-light red" onclick="deleteSolicitation('<%= solicitation.id %>')">
-            <i class="material-icons">delete</i>
-          </button>
+            <button class="btn-small waves-effect waves-light red" onclick="openDeleteSolicitationModal('<%= solicitation.id %>', 'Solicitação ID: <%= solicitation.id %>')">
+              <i class="material-icons">delete</i>
+            </button>
           </td>
         </tr>
       <% }) %>
     <% } else { %>
       <tr>
-        <td colspan="6">Nenhuma solicitação encontrada.</td>
+        <td colspan="<%= (typeof cols !== 'undefined' && Array.isArray(cols) ? cols.length : 0) + 2 %>">Nenhuma solicitação encontrada.</td>
       </tr>
     <% } %>
   </tbody>
 </table>
 
-<!-- jQuery CDN -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<div id="deleteSolicitationConfirmModal" class="modal">
+  <div class="modal-content">
+    <h4>Confirmar Exclusão</h4>
+    <p>Tem certeza que deseja excluir esta solicitação? (<span id="modalSolicitationDesc"></span>)</p>
+    <p>Esta ação não pode ser desfeita.</p>
+  </div>
+  <div class="modal-footer">
+    <a href="#!" class="modal-close waves-effect waves-grey btn-flat">Cancelar</a>
+    <a href="#!" id="confirmDeleteSolicitationBtn" class="waves-effect waves-red btn red">Excluir</a>
+  </div>
+</div>
+
+<script src="https://unpkg.com/imask"></script> 
 
 <script>
-  // Botão mostrar/esconder a tabela
-  $(document).ready(function () {
-    $('#toggleTableBtn').click(function () {
-      $('#solicitationTable').slideToggle(300);
-      const atual = $(this).text();
-      $(this).text(atual === "Esconder Tabela"? "Mostrar Tabela" : "Esconder Tabela");
-    });
-  });
+  let allServiceOptionsData = [];
+  <% if (typeof services !== 'undefined' && services.length > 0) { %>
+    <% services.forEach(function(service_item) { %>
+      <%
+        const serviceNameJS = service_item.nome ? service_item.nome.replace(/'/g, "\\'").replace(/"/g, "&quot;") : '';
+        let priceTextJS = "N/A";
+        if (service_item && typeof service_item.preco === 'number' && !isNaN(service_item.preco)) {
+            priceTextJS = `R$ ${service_item.preco.toFixed(2)}`;
+        } else if (service_item && service_item.preco !== null && typeof service_item.preco !== 'undefined') {
+            const priceAsNum = Number(String(service_item.preco).replace(',', '.'));
+            if (!isNaN(priceAsNum)) { priceTextJS = `R$ ${priceAsNum.toFixed(2)}`; }
+            else { priceTextJS = `R$ ${String(service_item.preco || '').replace(/'/g, "\\'").replace(/"/g, "&quot;")}`; }
+        }
+        const serviceDisplayTextJS = serviceNameJS + (priceTextJS !== "N/A" ? ' - ' + priceTextJS : '');
+      %>
+      allServiceOptionsData.push({
+        id: String("<%= service_item.id %>"),
+        name: <%- JSON.stringify(serviceNameJS) %>,
+        displayText: <%- JSON.stringify(serviceDisplayTextJS) %>
+      });
+    <% }); %>
+  <% } %>
 
-  const form = document.getElementById('solicitationForm');
+  let solicitationIdToDelete = null;
+  let deleteSolicitationModalInstance;
+  let solicitationDataHoraMask;
+  
+  let materializeServicesSelectInstance;
+  let serviceSearchInputInDropdownEl; 
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const solicitation = mountDataForm();
-
-    const id = document.getElementById("id").value;
-    const METHOD = id ? 'PUT' : 'POST';
-    const URL = id ? `/solicitations/${id}` : '/solicitations';
-
-    createOrUpdate(solicitation, URL, METHOD);
-  });
-
-  function createOrUpdate(solicitation, URL, METHOD) {
-    fetch(URL, {
-      method: METHOD,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(solicitation)
-    })
-    .then(async (res) => await checkERROR(res))
-    .then(() => {
-      form.reset();
-      window.location.reload();
-    })
-    .catch((error) => {
-      document.getElementById('error').innerText = error.message || "Erro ao salvar";
-    });
-  }
-
-  function editSolicitation(id) {
-    fetch("/solicitations/" + id, { method: "GET" })
-    .then(async (res) => await checkERROR(res))
-    .then((solicitation) => {
-      for (let prop in solicitation) {
-        const input = document.querySelector(`input[name="${prop}"]`);
-        if (input) input.value = solicitation[prop];
-      }
-    })
-    .catch((error) => {
-      document.getElementById('error').innerText = error.message || error;
-    });
-  }
-
-  function deleteSolicitation(id) {
-    fetch("/solicitations/" + id, { method: "DELETE" })
-    .then(async (res) => await checkERROR(res))
-    .then(() => {
-      window.location.reload();
-    })
-    .catch((error) => {
-      document.getElementById('error').innerText = JSON.stringify(error);
-    });
-  }
+  // ===================================================================================
+  // DEFINIÇÕES DAS FUNÇÕES AUXILIARES
+  // ===================================================================================
 
   async function checkERROR(res) {
     if (!res.ok) {
-      let err = { message: 'Erro desconhecido' };
+      let errorBody = await res.text();
       try {
-        err = await res.json();
-      } catch (e) {}
-      throw err;
-    }
-    return res.json();
-  }
-
-  function mountDataForm() {
-    const formData = new FormData(form);
-    const solicitation = {};
-    formData.forEach((v, k) => {
-      solicitation[k] = v;
-    });
-    return solicitation;
-  }
-</script>
-<script src="https://unpkg.com/imask"></script>
-<script>
-  const dhInput = document.getElementById('data_hora');
-  const dateTimeMaskOptions = {
-      mask: Date,
-      pattern: 'd{`/`}m{`/`}Y | H:MM', // Formato: dia/mêshora:minuto
-      lazy: true,
-      autofix: true,
-      // Opcional: min e max para limitar o intervalo
-      min: new Date(1900, 0, 1, 0, 0, 0),
-      max: new Date(2050, 11, 31, 23, 59, 59),
-
-      // Elementos de data e hora e seus ranges
-      blocks: {
-          d: {
-              mask: IMask.MaskedRange,
-              from: 1,
-              to: 31
-          },
-          m: {
-              mask: IMask.MaskedRange,
-              from: 1,
-              to: 12
-          },
-          H: {
-              mask: IMask.MaskedRange,
-              from: 0,
-              to: 23
-          },
-          M: {
-              mask: IMask.MaskedRange,
-              from: 0,
-              to: 59
-          }
+        errorBody = JSON.parse(errorBody); // Tenta parsear como JSON
+      } catch (e) {
+        // Mantém como texto se não for JSON
       }
-  };
-const dhMask = IMask(dhInput, dateTimeMaskOptions);
+      console.error("Erro na resposta do servidor:", res.status, errorBody);
+      throw { status: res.status, message: errorBody.message || errorBody || `Erro ${res.status}` };
+    }
+    // Se a resposta for OK mas vazia (ex: DELETE bem sucedido com 204 No Content)
+    if (res.status === 204 || res.status === 201 && res.headers.get("content-length") === "0") {
+        return null; // ou {} dependendo do que se espera
+    }
+    // Se chegou aqui, res.ok é true e tem corpo, então tenta parsear JSON
+    // (Se o content-type não for json, ou se for um redirect, pode precisar de tratamento adicional)
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+        return res.json();
+    }
+    return res.text(); // Fallback para texto se não for JSON
+  }
+  
+  function mountSolicitationDataForm(currentForm) {
+    const formData = new FormData(currentForm);
+    const data = {};
+
+    formData.forEach((value, key) => {
+      if (key === 'pets_solicitacao' || key === 'servicos_selecionados') { // Campos de select multiple
+        if (!data[key]) {
+          data[key] = [];
+        }
+        data[key].push(value);
+      } else {
+        data[key] = value;
+      }
+    });
+    
+    // Ajustes para o backend, se necessário (conforme lógica anterior do botão de submit)
+    data.tutor = data.tutor_id; // Renomeia tutor_id para tutor
+    // delete data.tutor_id; // Opcional: remove o campo original se não for necessário
+
+    // Converte arrays de pets e serviços para string CSV se o backend esperar assim
+    // Se o backend espera arrays, não precisa do .join(',')
+    if (Array.isArray(data.pets_solicitacao)) {
+        data.pet = data.pets_solicitacao.join(',');
+    } else {
+        data.pet = data.pets_solicitacao || '';
+    }
+    // delete data.pets_solicitacao; // Opcional
+
+    if (Array.isArray(data.servicos_selecionados)) {
+        data.servico = data.servicos_selecionados.join(',');
+    } else {
+        data.servico = data.servicos_selecionados || '';
+    }
+    // delete data.servicos_selecionados; // Opcional
+
+    // O campo 'id' já está no 'solicitation_id_hidden' e será incluído se tiver valor.
+    // Se o backend espera o id com outro nome (ex: 'solicitationId'), ajuste aqui.
+    // data.id = document.getElementById("solicitation_id_hidden").value; // Já está no formData se 'id' for o name
+    
+    console.log("Dados montados do formulário:", data);
+    return data;
+  }
+
+  async function createOrUpdateSolicitation(data, URL, METHOD, errorDisplayElement) {
+    if (errorDisplayElement) errorDisplayElement.innerText = ''; // Limpa erros anteriores
+
+    try {
+      const response = await fetch(URL, {
+        method: METHOD,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const responseData = await checkERROR(response);
+      
+      alert(`Solicitação ${METHOD === 'POST' ? 'criada' : 'atualizada'} com sucesso!`);
+      if (typeof resetSolicitationForm === 'function') resetSolicitationForm(); // Limpa o formulário
+      
+      // Re-inicializar selects do Materialize após resetar/submeter
+      var selectElems = document.querySelectorAll('select');
+      M.FormSelect.init(selectElems);
+      
+      window.location.reload(); // Recarrega a página para ver a tabela atualizada
+
+    } catch (error) {
+      console.error(`Erro ao ${METHOD === 'POST' ? 'criar' : 'atualizar'} solicitação:`, error);
+      if (errorDisplayElement) {
+        errorDisplayElement.innerText = `Erro: ${error.message || JSON.stringify(error)}`;
+      } else {
+        alert(`Erro: ${error.message || JSON.stringify(error)}`);
+      }
+    }
+  }
+
+  async function editSolicitation(id) {
+    console.log("Tentando editar solicitação com ID:", id);
+    const errorDisplay = document.getElementById('solicitationError');
+    if (errorDisplay) errorDisplay.innerText = '';
+
+    try {
+      // 1. Buscar dados da solicitação. Crie uma rota no backend como /solicitations/data/:id que retorne os dados da solicitação em JSON.
+      //    Certifique-se que ela retorna os IDs dos pets e serviços associados.
+      const targetUrl = `/solicitations/${id}`; // Define a URL correta
+      console.log("--- [FRONTEND DEBUG] Tentando fazer fetch para URL:", targetUrl, "com ID:", id, "---"); // Adicione este log para depuração
+      const response = await fetch(targetUrl); // Usa a URL correta
+      const solicitationData = await checkERROR(response);
+
+      console.log("Dados recebidos para edição:", solicitationData);
+
+      document.getElementById('solicitation_id_hidden').value = solicitationData.id;
+
+      // Preencher Tutor
+      const tutorSelect = document.getElementById('solicitation_tutor_select');
+      tutorSelect.value = solicitationData.tutor_id; // Supondo que a API retorna 'tutor_id'
+
+      // Preencher Data e Hora
+      const dataHoraInput = document.getElementById('solicitation_data_hora');
+      if (solicitationData.data_hora) {
+        const dateObj = new Date(solicitationData.data_hora);
+        if (!isNaN(dateObj.getTime())) {
+          const day = String(dateObj.getDate()).padStart(2, '0');
+          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const year = dateObj.getFullYear();
+          const hours = String(dateObj.getHours()).padStart(2, '0');
+          const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+          const formattedDateTime = `${day}/${month}/${year} ${hours}:${minutes}`;
+          dataHoraInput.value = formattedDateTime;
+          if (solicitationDataHoraMask) {
+            solicitationDataHoraMask.value = formattedDateTime; // Atualiza o valor da máscara
+          }
+        }
+      }
+      
+      // Preencher Status
+      document.getElementById('solicitation_status_select').value = solicitationData.status;
+
+      // Re-inicializar selects de Tutor e Status para refletir os valores
+      M.FormSelect.init(tutorSelect);
+      M.FormSelect.init(document.getElementById('solicitation_status_select'));
+      if (M.updateTextFields) M.updateTextFields(); // Para o label da data/hora subir
+
+      // Lógica para Pets: Dispara o 'change' no tutor para carregar os pets.
+      // Depois, um timeout para dar tempo aos pets carregarem e então selecioná-los.
+      // Isso é um paliativo. O ideal é a função de carregar pets retornar uma Promise.
+      const petSelect = document.getElementById('solicitation_pet_select');
+      tutorSelect.dispatchEvent(new Event('change')); // Dispara o carregamento de pets
+
+      setTimeout(() => {
+        if (solicitationData.pets_solicitacao && Array.isArray(solicitationData.pets_solicitacao)) {
+          // Supondo que 'pets_solicitacao' no JSON é um array de IDs de pets
+          const petValuesToSelect = solicitationData.pets_solicitacao.map(String); // Garante que são strings
+          
+          const petSelectInstance = M.FormSelect.getInstance(petSelect);
+          if (petSelectInstance) petSelectInstance.destroy(); // Destrói para poder selecionar programaticamente
+
+          Array.from(petSelect.options).forEach(option => {
+            option.selected = petValuesToSelect.includes(String(option.value));
+          });
+          M.FormSelect.init(petSelect); // Reinicializa com os valores selecionados
+          console.log("Pets selecionados (tentativa).", petValuesToSelect);
+        }
+      }, 1500); // Ajuste este tempo conforme necessário ou melhore com Promises
+
+      // Preencher Serviços (Select Múltiplo)
+      const serviceSelect = document.getElementById('solicitation_service_select');
+      if (solicitationData.servicos_selecionados && Array.isArray(solicitationData.servicos_selecionados)) {
+        // Supondo que 'servicos_selecionados' no JSON é um array de IDs de serviços
+        const serviceValuesToSelect = solicitationData.servicos_selecionados.map(String);
+        
+        const serviceSelectInstance = M.FormSelect.getInstance(serviceSelect);
+        if (serviceSelectInstance) serviceSelectInstance.destroy();
+
+        Array.from(serviceSelect.options).forEach(option => {
+          option.selected = serviceValuesToSelect.includes(String(option.value));
+        });
+        M.FormSelect.init(serviceSelect); // Reinicializa com os valores selecionados
+      }
+      
+      document.getElementById('submitSolicitationBtn').childNodes[0].nodeValue = "Atualizar Solicitação ";
+      window.scrollTo(0, 0); // Rola para o topo
+      console.log("Formulário preenchido para edição.");
+
+    } catch (error) {
+      console.error("Erro em editSolicitation:", error);
+      if (errorDisplay) errorDisplay.innerText = `Erro ao carregar dados para edição: ${error.message || JSON.stringify(error)}`;
+    }
+  }
+
+  function openDeleteSolicitationModal(id, solicitationDesc) {
+    console.log("Abrindo modal para deletar ID:", id, "Descrição:", solicitationDesc);
+    solicitationIdToDelete = id;
+    const modalDescElement = document.getElementById('modalSolicitationDesc');
+    if (modalDescElement) {
+        modalDescElement.textContent = solicitationDesc || `ID ${id}`;
+    }
+    
+    if (deleteSolicitationModalInstance) {
+      deleteSolicitationModalInstance.open();
+      console.log("Modal de deleção aberto.");
+    } else {
+      console.error("Instância do modal de deleção não encontrada. Tentando inicializar.");
+      var modalElem = document.getElementById('deleteSolicitationConfirmModal');
+      if (modalElem) {
+        deleteSolicitationModalInstance = M.Modal.init(modalElem);
+        deleteSolicitationModalInstance.open();
+      } else {
+        console.error("Elemento do modal de deleção não encontrado.");
+      }
+    }
+  }
+
+  function resetSolicitationForm() {
+    const form = document.getElementById('solicitationForm');
+    if (form) form.reset();
+    document.getElementById('solicitation_id_hidden').value = '';
+
+    // Limpar e reinicializar selects do Materialize
+    const petSelect = document.getElementById('solicitation_pet_select');
+    petSelect.innerHTML = '<option value="" disabled>Selecione um tutor para ver os pets</option>';
+    
+    var selectElems = document.querySelectorAll('select');
+    selectElems.forEach(select => {
+        const instance = M.FormSelect.getInstance(select);
+        if (instance) instance.destroy(); // Destruir para limpar seleções múltiplas corretamente
+    });
+    M.FormSelect.init(selectElems); // Reinicializar todos
+    
+    // Re-selecionar a opção "Selecione um Tutor"
+    const tutorSelect = document.getElementById('solicitation_tutor_select');
+    if (tutorSelect) tutorSelect.value = ""; M.FormSelect.init(tutorSelect);
+
+
+    if (solicitationDataHoraMask) solicitationDataHoraMask.value = ''; // Limpa a máscara
+
+    const errorDisplay = document.getElementById('solicitationError');
+    if (errorDisplay) errorDisplay.innerText = '';
+    
+    document.getElementById('submitSolicitationBtn').childNodes[0].nodeValue = "Enviar Solicitação ";
+    if (M.updateTextFields) M.updateTextFields(); // Atualiza labels de inputs de texto
+    console.log("Formulário resetado.");
+  }
+
+  function filterServiceOptionsInDropdown() { 
+    /* ... (COPIE SUA LÓGICA DA RESPOSTA ANTERIOR AQUI, SE TIVER) ... */ 
+    // Esta função provavelmente filtra as opções no dropdown de serviços
+    // com base no que o usuário digita no campo de busca que setUpServiceSearchFeature cria.
+    // Exemplo muito básico:
+    if (serviceSearchInputInDropdownEl && materializeServicesSelectInstance) {
+        const searchTerm = serviceSearchInputInDropdownEl.value.toLowerCase();
+        const serviceOptionsContainer = materializeServicesSelectInstance.dropdownOptions.querySelector('ul'); // ou similar
+        
+        allServiceOptionsData.forEach(serviceData => {
+            const optionElement = serviceOptionsContainer.querySelector(`li[data-id="${serviceData.id}"]`); // Supondo que você adicione data-id
+            if (optionElement) {
+                if (serviceData.name.toLowerCase().includes(searchTerm) || serviceData.displayText.toLowerCase().includes(searchTerm)) {
+                    optionElement.style.display = '';
+                } else {
+                    optionElement.style.display = 'none';
+                }
+            }
+        });
+    }
+  }
+
+  function setUpServiceSearchFeature(selectInstance) {
+    /* ... (COPIE SUA LÓGICA DA RESPOSTA ANTERIOR AQUI, SE TIVER) ... */
+    // Esta função provavelmente adiciona um campo de input de busca ao dropdown do select de serviços.
+    // Exemplo muito básico:
+    if (!selectInstance || serviceSearchInputInDropdownEl) return;
+
+    const dropdownContent = selectInstance.dropdownOptions; // O elemento ul que contém as opções li
+    if (dropdownContent) {
+        serviceSearchInputInDropdownEl = document.createElement('input');
+        serviceSearchInputInDropdownEl.type = 'text';
+        serviceSearchInputInDropdownEl.placeholder = 'Buscar serviço...';
+        serviceSearchInputInDropdownEl.classList.add('service-search-input'); // Adicione estilos para esta classe
+        serviceSearchInputInDropdownEl.style.margin = '5px 15px';
+        serviceSearchInputInDropdownEl.style.width = 'calc(100% - 30px)';
+        serviceSearchInputInDropdownEl.style.borderBottom = '1px solid #ccc';
+        serviceSearchInputInDropdownEl.style.padding = '5px';
+
+        // Evitar que o clique no input feche o dropdown
+        serviceSearchInputInDropdownEl.addEventListener('click', (e) => e.stopPropagation());
+        
+        serviceSearchInputInDropdownEl.addEventListener('input', filterServiceOptionsInDropdown);
+
+        // Adiciona o campo de busca no topo do dropdown
+        if (dropdownContent.firstChild) {
+            dropdownContent.insertBefore(serviceSearchInputInDropdownEl, dropdownContent.firstChild);
+        } else {
+            dropdownContent.appendChild(serviceSearchInputInDropdownEl);
+        }
+        console.log("Campo de busca de serviços adicionado.");
+    } else {
+        console.warn("Dropdown de serviços não encontrado para adicionar busca.");
+    }
+  }
+
+  // ===================================================================================
+  // INICIALIZAÇÃO E EVENT LISTENERS
+  // ===================================================================================
+
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log("Solicitations.ejs: DOMContentLoaded - Iniciando");
+    try {
+      var selectElems = document.querySelectorAll('select');
+      M.FormSelect.init(selectElems); 
+      console.log("Solicitations.ejs: Materialize Selects inicializados.");
+
+      var modalElem = document.getElementById('deleteSolicitationConfirmModal');
+      if (modalElem) {
+          // M.Modal.init retorna um array de instâncias, pegamos a primeira.
+          const modalInstances = M.Modal.init(modalElem);
+          if (modalInstances && modalInstances.length > 0) {
+              deleteSolicitationModalInstance = modalInstances[0];
+              console.log("Solicitations.ejs: Modal de deleção inicializado.");
+          } else if (modalInstances && !Array.isArray(modalInstances)) { // Para versões mais antigas do Materialize que retornam uma única instância
+              deleteSolicitationModalInstance = modalInstances;
+              console.log("Solicitations.ejs: Modal de deleção (instância única) inicializado.");
+          } else {
+              console.warn("Solicitations.ejs: M.Modal.init não retornou instâncias para deleteSolicitationConfirmModal.");
+          }
+      } else {
+          console.warn("Solicitations.ejs: Elemento do modal 'deleteSolicitationConfirmModal' não encontrado.");
+      }
+      
+      const confirmDeleteBtn = document.getElementById('confirmDeleteSolicitationBtn');
+      if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+          if (solicitationIdToDelete) {
+            fetch(`/solicitations/${solicitationIdToDelete}`, { method: "DELETE" })
+            .then(async (res) => await checkERROR(res)) // Usa checkERROR
+            .then(() => { 
+                alert('Solicitação deletada com sucesso!');
+                window.location.reload(); 
+            })
+            .catch((error) => { 
+              const errorDisplay = document.getElementById('solicitationError');
+              if (errorDisplay) errorDisplay.innerText = 'Erro ao deletar solicitação: ' + (error.message || JSON.stringify(error));
+              else alert('Erro ao deletar solicitação: ' + (error.message || JSON.stringify(error)));
+            })
+            .finally(() => {
+              if (deleteSolicitationModalInstance) deleteSolicitationModalInstance.close();
+              solicitationIdToDelete = null;
+            });
+          }
+        });
+      }
+
+      const dhInput = document.getElementById('solicitation_data_hora');
+      if (dhInput && typeof IMask !== 'undefined') {
+        try {
+          console.log("Solicitations.ejs: Tentando inicializar IMask para solicitation_data_hora.");
+          const dateTimeMaskOptions = {
+            mask: Date,
+            pattern: 'd{/}`m{/}`Y HH:MM',
+            lazy: false,
+            format: function (date) {
+              if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+              try {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${day}/${month}/${year} ${hours}:${minutes}`;
+              } catch (e) { return ''; }
+            },
+            parse: function (str) {
+              const parts = str.match(/^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/);
+              if (!parts) return null;
+              return new Date(parts[3], parseInt(parts[2],10) - 1, parts[1], parts[4], parts[5]);
+            },
+            blocks: {
+              d: { mask: IMask.MaskedRange, from: 1, to: 31, maxLength: 2, autofix: 'pad' },
+              m: { mask: IMask.MaskedRange, from: 1, to: 12, maxLength: 2, autofix: 'pad' },
+              Y: { mask: IMask.MaskedRange, from: new Date().getFullYear() - 10, to: new Date().getFullYear() + 10, maxLength: 4 }, // Aumentei o range
+              HH: { mask: IMask.MaskedRange, from: 0, to: 23, maxLength: 2, autofix: 'pad' },
+              MM: { mask: IMask.MaskedRange, from: 0, to: 59, maxLength: 2, autofix: 'pad' }
+            },
+            placeholderChar: '_'
+          };
+          solicitationDataHoraMask = IMask(dhInput, dateTimeMaskOptions);
+          console.log("Solicitations.ejs: IMask para Data/Hora inicializado com sucesso.");
+        } catch (imaskInitError) {
+          console.error("Solicitations.ejs: ERRO AO INICIALIZAR O IMask:", imaskInitError);
+        }
+      } else {
+        if(!dhInput) console.warn("Solicitations.ejs: Input 'solicitation_data_hora' para IMask não encontrado.");
+        if(typeof IMask === 'undefined') console.error("Solicitations.ejs: ERRO CRÍTICO - IMask não está definido (biblioteca não carregada).");
+      }
+
+      const tutorSelect = document.getElementById('solicitation_tutor_select');
+      const petSelect = document.getElementById('solicitation_pet_select');
+      const serviceSelectHTMLEl = document.getElementById('solicitation_service_select');
+
+      if (serviceSelectHTMLEl) {
+        materializeServicesSelectInstance = M.FormSelect.getInstance(serviceSelectHTMLEl);
+        if (materializeServicesSelectInstance) {
+          console.log("Solicitations.ejs: Configurando busca para o select de Serviços.");
+          setUpServiceSearchFeature(materializeServicesSelectInstance);
+        } else {
+          setTimeout(() => { 
+            M.FormSelect.init(serviceSelectHTMLEl); // Tenta inicializar de novo
+            materializeServicesSelectInstance = M.FormSelect.getInstance(serviceSelectHTMLEl);
+            if (materializeServicesSelectInstance) {
+              console.log("Solicitations.ejs: Configurando busca para o select de Serviços (APÓS DELAY).");
+              setUpServiceSearchFeature(materializeServicesSelectInstance);
+            } else {
+              console.warn("Solicitations.ejs: Instância do Materialize Select para serviços AINDA não encontrada.");
+            }
+          }, 200); // Aumentei o delay um pouco
+        }
+      }
+
+      if (tutorSelect && petSelect) {
+        console.log("Solicitations.ejs: Event listener para 'solicitation_tutor_select' SENDO ADICIONADO.");
+        tutorSelect.addEventListener('change', function() {
+          const selectedTutorId = this.value;
+          console.log("Solicitations.ejs: EVENTO CHANGE NO TUTOR SELECT! ID:", selectedTutorId);
+
+          // Limpa o select de pets e destrói a instância do Materialize antes de popular
+          let petSelectMaterializeInstance = M.FormSelect.getInstance(petSelect);
+          if (petSelectMaterializeInstance) petSelectMaterializeInstance.destroy();
+          petSelect.innerHTML = '<option value="" disabled selected>Carregando pets...</option>';
+          M.FormSelect.init(petSelect); // Reinicializa o select vazio com a mensagem
+          
+          console.log("Solicitations.ejs: Select de pets limpo e mostrando 'Carregando...'.");
+
+          if (selectedTutorId) {
+            console.log("Solicitations.ejs: [FETCH PETS START] URL:", `/solicitations/fetch-pets-for-tutor/${selectedTutorId}`);
+            fetch(`/solicitations/fetch-pets-for-tutor/${selectedTutorId}`) 
+            .then(response => {
+              console.log("Solicitations.ejs: [FETCH PETS RESPONSE] Status:", response.status, response.statusText);
+              return checkERROR(response); // Usa checkERROR
+            })
+            .then(petsOfTutor => {
+              console.log("Solicitations.ejs: [FETCH PETS SUCCESS] Pets recebidos:", petsOfTutor);
+              
+              petSelectMaterializeInstance = M.FormSelect.getInstance(petSelect); // Pega instância de novo
+              if (petSelectMaterializeInstance) petSelectMaterializeInstance.destroy(); // Destroi de novo antes de popular
+              petSelect.innerHTML = ''; // Limpa completamente
+
+              const firstOption = document.createElement('option');
+              firstOption.value = "";
+              firstOption.textContent = "Selecione o(s) Pet(s)";
+              firstOption.disabled = true;
+              // firstOption.selected = true; // Não precisa de selected aqui se for múltiplo e tiver outras opções
+              petSelect.appendChild(firstOption);
+
+              if (petsOfTutor && petsOfTutor.length > 0) {
+                petsOfTutor.forEach(pet => {
+                  const option = document.createElement('option');
+                  option.value = pet.id;
+                  option.textContent = `${pet.name} (${pet.race || 'Sem raça'})`; // Ajuste 'name' e 'race' conforme sua API de pets
+                  petSelect.appendChild(option);
+                });
+              } else {
+                // Se não houver pets, a primeira opção "Selecione..." será a única, ou adicione uma específica.
+                const noPetsOption = document.createElement('option');
+                noPetsOption.value = "";
+                noPetsOption.textContent = "Nenhum pet para este tutor";
+                noPetsOption.disabled = true;
+                petSelect.appendChild(noPetsOption); // Adiciona, mas a "Selecione..." já está lá.
+                // Melhor apenas deixar "Selecione..." se não houver pets, ou mudar o texto dela.
+                firstOption.textContent = "Nenhum pet encontrado para este tutor";
+              }
+              M.FormSelect.init(petSelect); // Reinicializa o select populado
+              console.log("Solicitations.ejs: Select de Pets atualizado.");
+            })
+            .catch(error => {
+              console.error('Solicitations.ejs: [FETCH PETS CATCH] Erro:', error); 
+              petSelectMaterializeInstance = M.FormSelect.getInstance(petSelect);
+              if (petSelectMaterializeInstance) petSelectMaterializeInstance.destroy();
+              petSelect.innerHTML = `<option value="" disabled selected>Erro: ${error.message || 'Falha ao buscar pets'}</option>`;
+              M.FormSelect.init(petSelect);
+            });
+          } else {
+            console.log("Solicitations.ejs: Nenhum tutor ID. Limpando pets.");
+            petSelectMaterializeInstance = M.FormSelect.getInstance(petSelect);
+            if (petSelectMaterializeInstance) petSelectMaterializeInstance.destroy();
+            petSelect.innerHTML = '<option value="" disabled selected>Selecione um tutor para ver os pets</option>';
+            M.FormSelect.init(petSelect);
+          }
+        });
+      } else {
+        if (!tutorSelect) console.error("Solicitations.ejs: ERRO - 'solicitation_tutor_select' NÃO encontrado!");
+        if (!petSelect) console.error("Solicitations.ejs: ERRO - 'solicitation_pet_select' NÃO encontrado!");
+      }
+      
+      const formElement = document.getElementById('solicitationForm');
+      const errorDisplayElement = document.getElementById('solicitationError');
+
+      // Listener para o botão de submit (type="button")
+      const submitBtn = document.getElementById('submitSolicitationBtn');
+      if (submitBtn && formElement) {
+          submitBtn.addEventListener('click', function() {
+              console.log("Solicitations.ejs: Botão 'submitSolicitationBtn' CLICADO!");
+              if (formElement.checkValidity && !formElement.checkValidity()) {
+                  formElement.reportValidity(); // Mostra mensagens de validação do HTML5
+                  console.warn("Solicitations.ejs: Formulário inválido.");
+                  return;
+              }
+              const data = mountSolicitationDataForm(formElement); 
+              console.log("Solicitations.ejs: Dados montados para submit:", JSON.stringify(data, null, 2));
+              
+              const id = document.getElementById("solicitation_id_hidden").value;
+              const METHOD = id ? 'PUT' : 'POST';
+              const URL = id ? `/solicitations/${id}` : '/solicitations'; 
+              
+              console.log(`Solicitations.ejs: Chamando createOrUpdateSolicitation. URL: ${URL}, Método: ${METHOD}`);
+              createOrUpdateSolicitation(data, URL, METHOD, errorDisplayElement);
+          });
+      } else {
+        if (!submitBtn) console.error("Solicitations.ejs: ERRO CRÍTICO - Botão 'submitSolicitationBtn' NÃO encontrado!");
+        if (!formElement) console.error("Solicitations.ejs: ERRO CRÍTICO - Formulário 'solicitationForm' NÃO encontrado!");
+      }
+      
+      // Se você quiser que o Enter no formulário também submeta (e o botão não for type="submit")
+      if (formElement) {
+          formElement.addEventListener("submit", (e) => {
+              e.preventDefault(); 
+              console.log("Solicitations.ejs: EVENTO SUBMIT (ex: Enter) DE SOLICITAÇÃO CAPTURADO!");
+              // Chama a mesma lógica do clique do botão
+              if (formElement.checkValidity && !formElement.checkValidity()) {
+                  formElement.reportValidity();
+                  return;
+              }
+              const data = mountSolicitationDataForm(formElement); 
+              const id = document.getElementById("solicitation_id_hidden").value;
+              const METHOD = id ? 'PUT' : 'POST';
+              const URL = id ? `/solicitations/${id}` : '/solicitations'; 
+              createOrUpdateSolicitation(data, URL, METHOD, errorDisplayElement);
+          });
+      }
+
+      const toggleBtn = document.getElementById('toggleSolicitationTableBtn');
+      const table = document.getElementById('solicitationTable');
+      if (toggleBtn && table) {
+        console.log("Solicitations.ejs: Botão 'toggleSolicitationTableBtn' e tabela encontrados. Adicionando listener.");
+        toggleBtn.addEventListener('click', function() {
+          console.log("Solicitations.ejs: Botão 'toggleSolicitationTableBtn' clicado.");
+          const isTableHidden = table.style.display === "none" || table.style.display === "";
+          const textNode = Array.from(this.childNodes).find(node => 
+            node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== ''
+          );
+
+          if (isTableHidden) {
+            table.style.display = "table"; 
+            if(textNode) textNode.nodeValue = "Esconder Tabela ";
+          } else {
+            table.style.display = "none";
+            if(textNode) textNode.nodeValue = "Mostrar Tabela ";
+          }
+        });
+      } else {
+        if (!toggleBtn) console.error("Solicitations.ejs: ERRO - Botão 'toggleSolicitationTableBtn' NÃO encontrado!"); 
+        if (!table) console.error("Solicitations.ejs: ERRO - Tabela 'solicitationTable' NÃO encontrada!"); 
+      }
+
+    } catch (err) {
+      console.error("Solicitations.ejs: Erro geral no DOMContentLoaded:", err);
+    }
+  }); // FIM DO DOMContentLoaded
 
 </script>
