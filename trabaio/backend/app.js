@@ -25,7 +25,7 @@ app.use(cookieParser()); // Para parsear cookies
 
 // Configuração de sessão (necessária para req.session.adminAccessToken)
 app.use(session({
-  secret: 'f7c74e23b069884c186e9c8f478b32522759e88e1d112ccf1e23ec25c2d4607b',
+  secret: process.env.TOKEN,
   resave: false,
   saveUninitialized: true,
   cookie: { 

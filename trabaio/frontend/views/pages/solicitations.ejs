@@ -156,7 +156,7 @@
   const dhInput = document.getElementById('data_hora');
   const dateTimeMaskOptions = {
       mask: Date,
-      pattern: 'd{`/-`}m H:MM', // Formato: dia/mêshora:minuto
+      pattern: 'd{`/`}m{`/`}Y | H:MM', // Formato: dia/mêshora:minuto
       lazy: true,
       autofix: true,
       // Opcional: min e max para limitar o intervalo
