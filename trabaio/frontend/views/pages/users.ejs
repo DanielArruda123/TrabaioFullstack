@@ -21,25 +21,26 @@
   <button class="btn waves-effect waves-light" type="reset" name="action">Limpar
     <i class="material-icons right">delete_sweep</i>
   </button>
+  <button id="toggleTableBtn" class="btn waves-effect waves-light" type="reset" name="action">Mostrar Tabela
+    <i class="material-icons right"></i>
+  </button>
 </form>
 
 <span id="error"></span>
 
 <% if (error) { %>
   <span><%= error %></span>
-<% } %>
-
-<!-- Botão de controle da tabela -->
-<button id="toggleTableBtn">Mostrar Tabela</button>
-
+  <% } %>
+  
+  <!-- Botão de controle da tabela -->
+  
 <table id="userTable" style="display: none; margin-top: 10px;">
   <thead>
-    <tr>
-      <th>ID</th>
-    <% for (let col of cols) { %>
-      <th><%= col %></th>
-    <% } %>
-    </tr>
+    <th>ID</th>
+      <th>Nome</th>
+      <th>Email</th>
+      <th>Telefone</th>
+      <th>Ações</th>
   </thead>
   <tbody>
     <% if (users && users.length > 0) { %>
@@ -47,12 +48,16 @@
         <tr>
           <td><%= user.id %></td>
           <td><%= user.username %></td>
-          <td><%= user.password %></td>
           <td><%= user.email %></td>
           <td><%= user.phone %></td>
           <td>
-            <button onclick="editUser('<%= user.id %>')">Editar</button>
-            <button onclick="deleteUser('<%= user.id %>')">Excluir</button>
+            <button class="btn-small waves-effect waves-light yellow darken-2" onclick="editUser('<%= user.id %>')">
+              <i class="material-icons">edit</i>
+            </button>
+
+          <button class="btn-small waves-effect waves-light red" onclick="deleteUser('<%= user.id %>')">
+            <i class="material-icons">delete</i>
+          </button>
           </td>
         </tr>
       <% }); %>
@@ -73,7 +78,7 @@
     $('#toggleTableBtn').click(function () {
       $('#userTable').slideToggle(300);
       const atual = $(this).text();
-      $(this).text(atual === "Mostrar Tabela" ? "Esconder Tabela" : "Mostrar Tabela");
+      $(this).text(atual === "Esconder Tabela"? "Mostrar Tabela" : "Esconder Tabela");
     });
   });
 
@@ -96,7 +101,7 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(user)
     })
-    .then(async (res) => { return await checkERROR(res) })
+    .then(async (res) => { })
     .then(() => {
       form.reset()
       window.location.reload()
